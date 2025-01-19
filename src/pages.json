@@ -1,0 +1,78 @@
+{
+  "pages": [
+    {
+      "path": "pages/my/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/order/index",
+      "style": {
+        "navigationBarTitleText": "订单",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "components/home/Container"
+    },
+    {
+      "path": "components/home/Header"
+    },
+    {
+      "path": "components/home/Tab"
+    },
+    {
+      "path": "pages/auth/index"
+    }
+  ],
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ba2636",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "",
+        "iconPath": "static/home.png",
+        "selectedIconPath": "static/home-a.png"
+      },
+      {
+        "pagePath": "pages/order/index",
+        "text": "",
+        "iconPath": "static/order.png",
+        "selectedIconPath": "static/order-a.png"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "text": "",
+        "iconPath": "static/my.png",
+        "selectedIconPath": "static/my-a.png"
+      }
+]
+  },
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+            "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
+            "^u--(.*)": "uview-plus/components/u-$1/u-$1.vue",
+            "^up-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+            "^u-([^-].*)": "uview-plus/components/u-$1/u-$1.vue"
+    }
+  }
+}
