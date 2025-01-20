@@ -1,7 +1,8 @@
 <template>
   <div class="my w-100vw h-100vh relative">
+    <div class="purplegirl"></div>
     <div class="redball"></div>
-    <div class="my-main">
+    <!-- <div class="my-main">
       <div class="my-main-header">
         <image src="@/static/my/avatar.jpg" class="header-image"></image>
         <div class="header-userinfo">
@@ -26,7 +27,7 @@
           <Album />
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -42,18 +43,26 @@ import Album from '@/components/my/Album.vue'
   display: flex;
   background-color: #f6f6f6;
 
+  .purplegirl {
+    position: absolute;
+    z-index: 0;
+    width: 100vw;
+    height: 224rpx;
+    filter: blur(40px);
+    background: linear-gradient(270deg, #FEF4FA 14.42%, #EEE7F9 55.21%, #E1F0FD 96%);
+  }
   .redball {
     position: absolute;
     z-index: 0;
-    top: 248rpx;
+    top: 268rpx;
     left: 122rpx;
     width: 266rpx;
-    height: 160rpx;
-    background-color: #ba2636;
-    opacity: 0.2;
+    height: 492rpx;
+    background-color: #FCE1E1;;
+    opacity: 0.8;
     filter: blur(70rpx);
     transform: scale(1); /* 初始大小为1 */
-    animation: breathe 2.5s ease-in-out infinite alternate; /* 使用呼吸效果的动画 */
+    // animation: breathe 2.5s ease-in-out infinite alternate; /* 使用呼吸效果的动画 */
   }
 
   &-main {

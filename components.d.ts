@@ -8,10 +8,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Album: typeof import('./src/components/my/Album.vue')['default']
-    Container: typeof import('./src/components/home/Container.vue')['default']
-    Header: typeof import('./src/components/home/Header.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    Tab: typeof import('./src/components/home/Tab.vue')['default']
+    Tab: typeof import('./src/components/my/Tab.vue')['default']
   }
 }

@@ -1,9 +1,22 @@
 {
   "pages": [
     {
+      "path": "pages/auth/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/my/index",
       "style": {
         "navigationBarTitleText": "我的",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/album/index",
+      "style": {
+        "navigationBarTitleText": "相册",
         "navigationStyle": "custom"
       }
     },
@@ -20,18 +33,19 @@
         "navigationBarTitleText": "订单",
         "navigationStyle": "custom"
       }
-    },
+    }
+  ],
+  "subPackages": [
     {
-      "path": "components/home/Container"
-    },
-    {
-      "path": "components/home/Header"
-    },
-    {
-      "path": "components/home/Tab"
-    },
-    {
-      "path": "pages/auth/index"
+      "root": "packageHome",
+      "pages": [
+        {
+          "path": "test/index",
+          "style": {
+            "navigationBarTitleText": "测试"
+          }
+        }
+      ]
     }
   ],
   "tabBar": {
@@ -42,21 +56,27 @@
     "list": [
       {
         "pagePath": "pages/home/index",
-        "text": "",
+        "text": "首页",
         "iconPath": "static/home.png",
-        "selectedIconPath": "static/home-a.png"
+        "selectedIconPath": "static/home-active.png"
+      },
+      {
+        "pagePath": "pages/album/index",
+        "text": "相册",
+        "iconPath": "static/album.png",
+        "selectedIconPath": "static/album-active.png"
       },
       {
         "pagePath": "pages/order/index",
-        "text": "",
+        "text": "订单",
         "iconPath": "static/order.png",
-        "selectedIconPath": "static/order-a.png"
+        "selectedIconPath": "static/order-active.png"
       },
       {
         "pagePath": "pages/my/index",
-        "text": "",
+        "text": "我的",
         "iconPath": "static/my.png",
-        "selectedIconPath": "static/my-a.png"
+        "selectedIconPath": "static/my-active.png"
       }
 ]
   },

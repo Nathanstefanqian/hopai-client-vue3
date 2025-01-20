@@ -3,7 +3,7 @@ import request from '@/utils/request'
  export interface LoginVO {
   phoneCode: string // wx.getPhoneNumber获得
   loginCode: any // wx.login方法获得
-  userType: number // 3 摄影师
+  userType: number // 3 摄影师  1 客户
 }
 
 // 发送短信验证码

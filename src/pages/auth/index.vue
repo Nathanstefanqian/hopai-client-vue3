@@ -29,7 +29,7 @@ import { useUserStore } from '@/pinia/user'
 const userStore = useUserStore()
 const { message } = useNotification()
 const proxy = ref(false)
-const show = ref(true)
+const show = ref(false)
 const shake = ref(false)
 const loginCode = ref('')
 const handleAuthorize = () => {
@@ -51,7 +51,14 @@ const getUserPhoneNumber = async (e: any) => {
     return
   } 
   const phoneCode = e.detail.code
-  await userStore.login({ phoneCode, loginCode: loginCode.value, userType: 3 })
+  try {
+    await userStore.login({ phoneCode, loginCode: loginCode.value, userType: 3 })
+  } catch(e: any) {
+    message({ title: e })
+    return
+  }
+
+
   uni.reLaunch({ url: '/pages/home/index' })
   message({title: '授权成功' })
 }
