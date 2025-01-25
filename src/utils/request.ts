@@ -29,7 +29,6 @@ instance.interceptors.request.use(
   async (config: any) => {
     const userStore = useUserStore();
     const token = userStore.token;
-
     // 检查token是否过期，如果过期则刷新token
     if (!token) {
       return config;

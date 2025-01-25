@@ -8,7 +8,7 @@
 const test = () => {
   uni.navigateTo({
     url: '/packageHome/test/index'
-  });
+  })
 }
 </script>
 

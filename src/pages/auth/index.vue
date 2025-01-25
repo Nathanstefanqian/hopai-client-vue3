@@ -52,7 +52,7 @@ const getUserPhoneNumber = async (e: any) => {
   } 
   const phoneCode = e.detail.code
   try {
-    await userStore.login({ phoneCode, loginCode: loginCode.value, userType: 3 })
+    await userStore.login({ phoneCode, loginCode: loginCode.value, userType: 1 })
   } catch(e: any) {
     message({ title: e })
     return

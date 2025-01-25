@@ -8,6 +8,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Album: typeof import('./src/components/my/Album.vue')['default']
+    ImgCrop: typeof import('./src/components/img-crop/img-crop.vue')['default']
+    LjWaterfall: typeof import('./src/components/lj-waterfall/lj-waterfall.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Tab: typeof import('./src/components/my/Tab.vue')['default']
