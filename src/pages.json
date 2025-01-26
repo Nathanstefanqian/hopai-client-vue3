@@ -1,6 +1,13 @@
 {
   "pages": [
     {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/album/index",
       "style": {
         "navigationBarTitleText": "相册"
@@ -24,14 +31,6 @@
         "navigationBarTitleText": "我的",
         "navigationStyle": "custom"
       }
-    },
-
-    {
-      "path": "pages/home/index",
-      "style": {
-        "navigationBarTitleText": "首页",
-        "navigationStyle": "custom"
-      }
     }
   ],
   "subPackages": [
@@ -42,6 +41,18 @@
           "path": "test/index",
           "style": {
             "navigationBarTitleText": "测试"
+          }
+        },
+        {
+          "path": "sku/index",
+          "style": {
+            "navigationBarTitleText": "随心拍"
+          }
+        },
+        {
+          "path": "spu/index",
+          "style": {
+            "navigationStyle": "custom"
           }
         }
       ]
