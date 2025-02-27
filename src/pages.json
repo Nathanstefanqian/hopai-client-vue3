@@ -38,6 +38,42 @@
       "root": "packageHome",
       "pages": [
         {
+          "path": "appointment/index",
+          "style": {
+            "navigationBarTitleText": "立即预约"
+          }
+        },
+        {
+          "path": "appointment/photographer",
+          "style": {
+            "navigationBarTitleText": "选择摄影师"
+          }
+        },
+        {
+          "path": "appointment/photographerDetail",
+          "style": {
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "appointment/confirm",
+          "style": {
+            "navigationBarTitleText": "确认信息"
+          }
+        },
+        {
+          "path": "appointmentDetail/index",
+          "style": {
+            "navigationBarTitleText": "立即预约"
+          }
+        },
+        {
+          "path": "appointment/success",
+          "style": {
+            "navigationStyle": "custom"
+          }
+        },
+        {
           "path": "test/index",
           "style": {
             "navigationBarTitleText": "测试"
@@ -53,6 +89,12 @@
           "path": "spu/index",
           "style": {
             "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "appointment/photographerPhoto",
+          "style": {
+            "navigationBarTitleText": "作品集"
           }
         }
       ]

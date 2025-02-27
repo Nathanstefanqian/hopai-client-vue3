@@ -32,8 +32,8 @@
             <span style="font-size: 28rpx;">{{ item.text }}</span>
           </div>
         </div>
-        <div class="my-main-menu-logout">
-          退出登录
+        <div class="my-main-menu-logout" @click="!isLoggedIn && login()">
+          {{ isLoggedIn ? '退出登录' : '登录' }}
         </div>
       </div>
     </div>
@@ -45,6 +45,9 @@ import dayjs from 'dayjs';
 import { netConfig } from '@/config/net.config';
 import { getUserInfo } from '@/api/my/index';
 import { UserVO } from '@/api/auth/types';
+import { useUserStore } from '@/pinia/user'
+const { isLoggedIn } = useUserStore()
+
 
 const loading = ref(false);
 const user = ref<UserVO>({} as UserVO);
@@ -52,9 +55,16 @@ const babyBirthdayDisplay = ref('');
 const weddingAnniversaryDisplay = ref('');
 const birthdayDisplay = ref('');
 
+const login = () => {
+  console.log('123')
+  uni.navigateTo({
+    url: '/pages/auth/index'
+  });
+}
+
 const edit = () => {
   uni.navigateTo({
-    url: '/packageMy/basic/index',
+    url: '/packageMy/basic/index'
   });
 }
 
@@ -72,11 +82,17 @@ const previewPicture = () => {
 const formatDateDisplay = (date: string | number | null, type: string) => {
   if (!date) return '';
   const today = dayjs().startOf('day');
-  let targetDate = dayjs(date).startOf('day');
-  if (targetDate.isBefore(today)) {
-    targetDate = targetDate.add(1, 'year');
+  const targetDate = dayjs(date);
+  
+  // 使用当前年份和目标日期的月日
+  let nextDate = dayjs().year(today.year()).month(targetDate.month()).date(targetDate.date()).startOf('day');
+  
+  // 如果计算出的日期已经过去，则使用明年的日期
+  if (nextDate.isBefore(today)) {
+    nextDate = nextDate.add(1, 'year');
   }
-  const daysLeft = targetDate.diff(today, 'day');
+  
+  const daysLeft = nextDate.diff(today, 'day');
 
   // 如果是今天
   if (daysLeft === 0) {

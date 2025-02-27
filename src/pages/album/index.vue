@@ -119,6 +119,7 @@ onShow(async () => {
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
+      
       &-image {
         width: 100%;
         border-radius: 16rpx;

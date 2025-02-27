@@ -72,25 +72,25 @@ const test = () => {
 }
 
 const list1: string[] = [
-  'https://upload.codegod.site/test/1.jpg',
-  'https://upload.codegod.site/test/2.jpg',
-  'https://upload.codegod.site/test/3.jpg',
-  'https://upload.codegod.site/test/4.jpg',
-  'https://upload.codegod.site/test/5.jpg',
-  'https://upload.codegod.site/test/6.jpg',
-  'https://upload.codegod.site/test/7.jpg',
-  'https://upload.codegod.site/test/8.jpg'
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/2.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/3.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/4.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/5.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/6.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/7.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/8.jpg'
 ];
 
 const list2 = [
-  'https://upload.codegod.site/test2/1.jpg',
-  'https://upload.codegod.site/test2/2.jpg',
-  'https://upload.codegod.site/test2/3.jpg',
-  'https://upload.codegod.site/test2/4.jpg',
-  'https://upload.codegod.site/test2/5.jpg',
-  'https://upload.codegod.site/test2/6.jpg',
-  'https://upload.codegod.site/test2/7.jpg',
-  'https://upload.codegod.site/test2/8.jpg'
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/1.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/2.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/3.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/4.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/5.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/6.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/7.jpg',
+  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test2/8.jpg'
 ];
 </script>
 
@@ -160,10 +160,10 @@ const list2 = [
           margin-right: 40rpx;
           &-top {
             position: relative;
+            margin-bottom: 10rpx;
             &-image {
               border-radius: 12rpx;
             }
-            margin-bottom: 10rpx;
             .tag {
               position: absolute;
               z-index: 2;

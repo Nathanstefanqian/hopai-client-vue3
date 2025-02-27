@@ -18,14 +18,14 @@
 <script setup lang="ts">
 // 定义图片列表
 const list = ref([
-  { image: 'https://upload.codegod.site/test/1.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/2.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/3.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/4.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/5.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/6.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/7.jpg', selected: false },
-  { image: 'https://upload.codegod.site/test/8.jpg', selected: false }
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/2.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/3.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/4.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/5.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/6.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/7.jpg', selected: false },
+  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/8.jpg', selected: false }
 ]);
 
 const isSelected = ref<boolean>(false)

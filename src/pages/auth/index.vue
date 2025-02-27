@@ -1,7 +1,7 @@
 <template>
   <div class="auth w-100vw h-100vh relative">
     <div class="auth-main">
-      <image src="/static/auth/auth-login.svg"></image>
+      <image :src="netConfig.picURL + '/static/auth/auth-login.svg'"></image>
       <div class="auth-main-btn" @click="handleAuthorize">微信授权用户信息</div>
       <div class="auth-main-check" :class="{ shake: shake }">
         <up-checkbox class="mr-[16rpx]" shape="circle" @change="proxy = !proxy" v-model="proxy" usedAlone  />
@@ -26,6 +26,7 @@
 <script setup lang="ts">
 import { useNotification } from '@/hooks/useNotification';
 import { useUserStore } from '@/pinia/user'
+import { netConfig } from '@/config/net.config';
 const userStore = useUserStore()
 const { message } = useNotification()
 const proxy = ref(false)
