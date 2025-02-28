@@ -9,13 +9,13 @@
           <div class="my-main-info-desc-left">
             <div class="my-main-info-desc-left-top">
               <image @click="previewPicture" :src="user.avatar ? user.avatar : netConfig.picURL + '/static/my/avatar.jpg'" mode="aspectFill" class="avatar" />
-              <span style="font-size: 40rpx; font-weight: 400;"> {{ user.nickname }}</span>
+              <span style="font-size: 40rpx; font-weight: 400;"> {{ isLoggedIn ? user.nickname : '未登录' }}</span>
             </div>
             <div class="my-main-info-desc-left-bottom">
               <div v-html="babyBirthdayDisplay" class="date"></div>
               <div v-html="weddingAnniversaryDisplay" class="date"></div>
               <div v-html="birthdayDisplay" class="date"></div>
-              <div class="btn mt-10rpx" @click="edit()">编辑资料</div>
+              <div class="btn mt-10rpx" @click="isLoggedIn && edit()">编辑资料</div>
             </div>
           </div>
           <div class="my-main-info-desc-right">
@@ -32,7 +32,7 @@
             <span style="font-size: 28rpx;">{{ item.text }}</span>
           </div>
         </div>
-        <div class="my-main-menu-logout" @click="!isLoggedIn && login()">
+        <div class="my-main-menu-logout" @click="handleLogin">
           {{ isLoggedIn ? '退出登录' : '登录' }}
         </div>
       </div>
@@ -46,6 +46,7 @@ import { netConfig } from '@/config/net.config';
 import { getUserInfo } from '@/api/my/index';
 import { UserVO } from '@/api/auth/types';
 import { useUserStore } from '@/pinia/user'
+import { useNotification } from '@/hooks/useNotification';
 const { isLoggedIn } = useUserStore()
 
 
@@ -55,11 +56,35 @@ const babyBirthdayDisplay = ref('');
 const weddingAnniversaryDisplay = ref('');
 const birthdayDisplay = ref('');
 
-const login = () => {
-  console.log('123')
-  uni.navigateTo({
-    url: '/pages/auth/index'
-  });
+const { showModal } = useNotification()
+
+const handleLogin = () => {
+  if(!isLoggedIn) {
+      uni.navigateTo({
+      url: '/pages/auth/index'
+    })
+  } else {
+    showModal({
+      title: '退出确认',
+      content: '是否确认退出登录？'
+    }).then(() => {
+      const userStore = useUserStore()
+      userStore.logout()
+      uni.showToast({
+        title: '退出登录成功',
+        icon: 'success',
+        duration: 2000
+      })
+      setTimeout(() => {
+        uni.reLaunch({
+            url: '/pages/my/index' // 当前页面的路径
+        })
+      }, 2000);
+
+    }).catch(() => {
+      // 用户取消退出，不执行任何操作
+    })
+  }
 }
 
 const edit = () => {
