@@ -14,3 +14,8 @@ export const getUserPortraitUpload = async () => {
 export const getUserProfile = async () => {
   return await request.get('/infra/file/getSts/userProfile')
 }
+
+// 获取摄影师工作区的sts凭证
+export const getUserWorkSpace = async (id: any) => {
+  return await request.get(`/infra/file/getSts/workspaceCustomer?orderId=${id}`)
+}

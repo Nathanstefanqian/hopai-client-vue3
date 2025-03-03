@@ -1,13 +1,17 @@
 <template>
   <div class="photo-layout">
-    <div class="photo">
-      <div class="photo-item" v-for="(item, index) in list" :key="index" @click="isSelected ? item.selected = !item.selected : previewPicture(item.image)">
-        <image :src="item.image" class="photo-item-image" mode="aspectFill" />
-        <div class="checkbox">
-          <up-checkbox usedAlone v-model:checked="item.selected" v-if="isSelected" shape="circle" activeColor="#ba2636" />
+    <up-skeleton :loading="loading" :rows="3">
+      <div class="photo">
+        <div class="photo-item" v-for="(item, index) in list" :key="index" @click="isSelected ? item.selected = !item.selected : previewPicture(item.originalUrl)">
+          <image :src="item.picUrl" class="photo-item-image" mode="aspectFill" />
+          <div class="checkbox">
+            <up-checkbox usedAlone v-model:checked="item.selected" v-if="isSelected" shape="circle" activeColor="#ba2636" />
+          </div>
         </div>
       </div>
-    </div>
+    </up-skeleton>
+    <up-loadmore :status="loadMoreStatus" />
+    <div class="footer-blank"></div>
     <div class="footer">
       <div class="footer-btn mr-30rpx" @click="cancelSelected">取消选择</div>
       <div class="footer-btn" @click="handleSelected"> {{ isSelected == true ? '确认下载' : '批量选择' }}</div>
@@ -16,26 +20,92 @@
 </template>
 
 <script setup lang="ts">
-// 定义图片列表
-const list = ref([
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/2.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/3.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/4.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/5.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/6.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/7.jpg', selected: false },
-  { image: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/8.jpg', selected: false }
-]);
+import { getAlbumPhoto} from '@/api/album'
+import { useSts } from '@/hooks/useOss'
 
-const isSelected = ref<boolean>(false)
+// 定义页面参数
+const id = ref<string>('');
+const orderId = ref<string>('');
+const pageNo = ref<number>(1);
+const pageSize = ref<number>(20);
+const loading = ref<boolean>(true);
+const finished = ref<boolean>(false);
+const loadMoreStatus = ref<'loading' | 'nomore' | 'more'>('more');
+
+// 定义图片列表
+const list = ref<Array<{ picUrl: string; selected: boolean; originalUrl: string }>>([]);
+const isSelected = ref<boolean>(false);
+let getStsToken: () => Promise<void>;
+let signatrueUrl: (url: string) => Promise<string>;
+
+// 获取相册照片
+const fetchAlbumPhotos = async () => {
+  try {
+    loading.value = true;
+    const res = await getAlbumPhoto({ id: id.value, pageNo: pageNo.value, pageSize: pageSize.value });
+    const processedList = await Promise.all(
+      res.data.list.map(async (item: any) => {
+        const baseUrl = item.picUrl.split('com/')[1];
+        return {
+          picUrl: await signatrueUrl(baseUrl + '/minipreview'),
+          originalUrl: await signatrueUrl(baseUrl),
+          selected: false
+        };
+      })
+    );
+    
+    if (pageNo.value === 1) {
+      list.value = processedList;
+    } else {
+      list.value = [...list.value, ...processedList];
+    }
+    
+    if (res.data.list.length < pageSize.value) {
+      finished.value = true;
+      loadMoreStatus.value = 'nomore';
+    } else {
+      loadMoreStatus.value = 'more';
+    }
+  } catch (error) {
+    uni.showToast({
+      title: '加载失败，请重试',
+      icon: 'none'
+    });
+    loadMoreStatus.value = 'more';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 页面加载时获取参数
+onLoad(async (options: any) => {
+  if (options.id) {
+    id.value = options.id;
+    orderId.value = options.orderId;
+    const { getStsToken: getToken, signatrueUrl: signUrl } = useSts(orderId.value);
+    getStsToken = getToken;
+    signatrueUrl = signUrl;
+    await getStsToken();
+    await fetchAlbumPhotos();
+  }
+});
+
+// 监听页面上拉触底事件
+onReachBottom(async () => {
+  if (!finished.value && loadMoreStatus.value !== 'loading') {
+    loadMoreStatus.value = 'loading';
+    pageNo.value++;
+    await fetchAlbumPhotos();
+  }
+});
 
 // 定义图片预览函数
 const previewPicture = (currentUrl: string) => {
-  const imageUrls = list.value.map(item => item.image); // 从list中提取出所有的图片url
+  const imageUrls = list.value.map(item => item.originalUrl);
+  const currentIndex = list.value.findIndex(item => item.originalUrl === currentUrl);
   uni.previewImage({
-    urls: imageUrls,  // 这里使用的是图片列表 `list`
-    current: currentUrl  // 当前点击的图片
+    urls: imageUrls,
+    current: imageUrls[currentIndex]
   });
 }
 
@@ -53,8 +123,9 @@ const handleSelected = () => {
     isSelected.value = true;
   }
 }
+
 const downloadSelectedImages = () => {
-  const selectedImages = list.value.filter(item => item.selected).map(item => item.image);
+  const selectedImages = list.value.filter(item => item.selected).map(item => item.originalUrl);
   
   if (selectedImages.length > 0) {
     selectedImages.forEach((url) => {
@@ -72,9 +143,12 @@ const downloadSelectedImages = () => {
               success() {
                 // 同意授权后保存图片到相册
                 uni.saveImageToPhotosAlbum({
-                  filePath: tempFilePath,  // 使用下载得到的临时文件路径
+                  filePath: tempFilePath,
                   success() {
- 
+                    uni.showToast({
+                      title: '保存成功',
+                      icon: 'success'
+                    });
                   },
                   fail(err) {
                     console.error('保存图片到相册失败', err);
@@ -82,26 +156,22 @@ const downloadSelectedImages = () => {
                       title: '保存失败',
                       icon: 'none'
                     });
-                    return
                   }
                 });
               },
               fail() {
-                // 用户拒绝授权
                 uni.showToast({
                   title: '需要授权才能保存图片',
                   icon: 'none'
                 })
-                return
               }
             });
           } else {
             console.error(`下载失败: ${url}`);
             uni.showToast({
-              title: '下载失败123',
+              title: '下载失败',
               icon: 'none'
             });
-            return
           }
         },
         fail: (err) => {
@@ -110,7 +180,6 @@ const downloadSelectedImages = () => {
             title: `${err.errMsg}`,
             icon: 'none'
           });
-          return
         }
       });
     });
@@ -120,15 +189,8 @@ const downloadSelectedImages = () => {
       icon: 'none'
     });
   }
-  console.log('图片已保存到相册');
-  uni.showToast({
-    title: '图片已保存到相册',
-    icon: 'success'
-  });
 }
 </script>
-// todo 进度条，懒加载
-
 
 <style lang="scss" scoped>
 .photo-layout {
@@ -183,7 +245,11 @@ const downloadSelectedImages = () => {
       color: #fff;
       padding: 24rpx;
     }
-  }
 
+    &-blank {
+      width: 100vw;
+      height: 200rpx;
+    }
+  }
 }
 </style>

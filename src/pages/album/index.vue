@@ -8,22 +8,26 @@
         </div>
       </div>
     </scroll-view>
-    <scroll-view class="album-main-scrollview" scroll-y="true">
+    <up-skeleton :rows="3" :loading="loading">
+      <scroll-view class="album-main-scrollview" scroll-y="true" @scrolltolower="handleLoadMore">
       <div class="album-main">
         <!-- 这里必须叠一层 -->
         <div class="album-main-layout"> 
-          <div class="album-item" @click="handlePhoto(item)" v-for="item, index in [1,2,3,4,5,6,8,9,10]" :key="index">
-            <image :src="netConfig.picURL + '/static/album/demo.JPG'" class="album-item-image" mode="aspectFill" />
-            <div class="album-item-title">个人写真</div>
+          <div class="album-item" @click="handlePhoto(item)" v-for="item, index in album" :key="item.id">
+            <image :src="item.backgroundUrl" class="album-item-image" mode="aspectFill" />
+            <div class="album-item-title">{{ item.name }}</div>
             <div class="album-item-desc">
-              <span style="font-size: 36rpx;">25</span>
-              <span>2023-08-28</span>
+              <span style="font-size: 36rpx;">{{ item.number || 0 }}</span>
+              <span>{{ new Date(item.createTime).getFullYear() + '.' + (new Date(item.createTime).getMonth() + 1) + '.' + new Date(item.createTime).getDate() }}</span>
             </div>
           </div>
         </div>
+        <div class="load-more" v-if="hasMore || loading">
+          {{ loading ? '加载中...' : hasMore ? '上拉加载更多' : '没有更多了' }}
+        </div>
       </div>
     </scroll-view>
-
+    </up-skeleton>
   </div>
 </template>
 
@@ -31,38 +35,60 @@
 import { netConfig } from '@/config/net.config'
 import { getAlbumPage } from '@/api/album/index'
 const loading = ref(false)
-const album = ref([])
+const album = ref<any>([])
+const pageNo = ref(1)
+const hasMore = ref(true)
 const tabList = ref([
-  { name: '全部', path: '/' },
-  { name: '幸福拍', path: '/discover' },
-  { name: '家庭拍', path: '/my' },
-  { name: '公司拍', path: '/my' },
-  { name: '随心拍', path: '/my' }
+  { name: '全部', path: '/', categoryId: null },
+  { name: '幸福拍', path: '/discover', categoryId: 7 },
+  { name: '家庭拍', path: '/my', categoryId: 13 },
+  { name: '公司拍', path: '/my', categoryId: 50 },
+  { name: '随心拍', path: '/my', categoryId: 1 }
 ])
 const active = ref(0);
 const handleClick = (index: number) => {
   active.value = index;
-}
-
-const handlePhoto = () => {
-  uni.navigateTo({
-    url: '/packageAlbum/photo/index'
-  })
+  pageNo.value = 1;
+  album.value = [];
+  hasMore.value = true;
+  getData();
 }
 
 const getData = async () => {
+  if (loading.value || !hasMore.value) return;
   loading.value = true
   try {
-    album.value= (await getAlbumPage({ pageNo:1 , pageSize: 50 })).data?.list || []
-    // await Promise.all(album.value.map(async item => {
-    //   item.picUrl = (await getPhoto(item.coverPhotoId)).data.url || ''
-    // }))
+    const params = {
+      pageNo: pageNo.value,
+      pageSize: 10,
+      categoryId: tabList.value[active.value].categoryId
+    }
+    const res = await getAlbumPage(params)
+    const list = res.data?.list || []
+    if (list.length < params.pageSize) {
+      hasMore.value = false
+    }
+    album.value = [...album.value, ...list]
+    pageNo.value++
   } finally {
     loading.value = false
   }
 }
 
+const handleLoadMore = () => {
+  getData()
+}
+
+const handlePhoto = (item: any) => {
+  uni.navigateTo({
+    url: `/packageAlbum/photo/index?id=${item.id}&orderId=${item.orderId}`
+  })
+}
+
 onShow(async () => {
+  pageNo.value = 1;
+  album.value = [];
+  hasMore.value = true;
   await getData()
 })
 
@@ -141,4 +167,10 @@ onShow(async () => {
 
 }
 
+.load-more {
+  text-align: center;
+  padding: 20rpx 0;
+  color: #999;
+  font-size: 24rpx;
+}
 </style>

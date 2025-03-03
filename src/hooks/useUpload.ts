@@ -26,25 +26,27 @@ const computeSignature = (accessKeySecret: string, canonicalString: string) => {
 }
 
 
-// 定义type 0 为头像 1为资料
+// 定义type 0 为头像 1为资料 2为工作区
 export const useUpload = (type: number) =>  {
 
   const getConfig = async () => {
+    let res = null
     if(!type) {
-      const res = (await stsApi.getUserPortraitUpload()).data
-      config.value.accessid = res.credentials.accessKeyId
-      config.value.accesskey = res.credentials.accessKeySecret
-      config.value.securitytoken = res.credentials.securityToken
+      res = (await stsApi.getUserPortraitUpload()).data
       config.value.host = "https://hopai-user-portrait.oss-cn-shanghai.aliyuncs.com"
       config.value.bucketName = "hopai-user-portrait"
-    } else {
-      const res = (await stsApi.getUserProfile()).data
-      config.value.accessid = res.credentials.accessKeyId
-      config.value.accesskey = res.credentials.accessKeySecret
-      config.value.securitytoken = res.credentials.securityToken
+    } else if(type === 1) {
+      res = (await stsApi.getUserProfile()).data
       config.value.host = "https://hopai-user-profile.oss-cn-shanghai.aliyuncs.com"
       config.value.bucketName = "hopai-user-profile"
+    } else if(type === 2) {
+      res = (await stsApi.getUserWorkSpace()).data
+            config.value.host = "https://hopai-user-workspace.oss-cn-shanghai.aliyuncs.com"
+      config.value.bucketName = "hopai-user-workspace"
     }
+    config.value.accessid = res.credentials.accessKeyId
+    config.value.accesskey = res.credentials.accessKeySecret
+    config.value.securitytoken = res.credentials.securityToken
   }
   const uploadFile = async (path: any, onProgress: (progress: number) => void) => {
     return new Promise((resolve, reject) => {
