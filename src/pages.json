@@ -1,0 +1,172 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/album/index",
+      "style": {
+        "navigationBarTitleText": "相册"
+      }
+    },
+    {
+      "path": "pages/auth/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/order/index",
+      "style": {
+        "navigationBarTitleText": "订单"
+      }
+    },
+    {
+      "path": "pages/my/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "packageHome",
+      "pages": [
+        {
+          "path": "appointment/index",
+          "style": {
+            "navigationBarTitleText": "立即预约"
+          }
+        },
+        {
+          "path": "appointment/photographer",
+          "style": {
+            "navigationBarTitleText": "选择摄影师"
+          }
+        },
+        {
+          "path": "appointment/photographerDetail",
+          "style": {
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "appointment/confirm",
+          "style": {
+            "navigationBarTitleText": "确认信息"
+          }
+        },
+        {
+          "path": "appointmentDetail/index",
+          "style": {
+            "navigationBarTitleText": "立即预约"
+          }
+        },
+        {
+          "path": "appointment/success",
+          "style": {
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "test/index",
+          "style": {
+            "navigationBarTitleText": "测试"
+          }
+        },
+        {
+          "path": "sku/index",
+          "style": {
+            "navigationBarTitleText": "商品分类"
+          }
+        },
+        {
+          "path": "spu/index",
+          "style": {
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "appointment/photographerPhoto",
+          "style": {
+            "navigationBarTitleText": "作品集"
+          }
+        }
+      ]
+    },
+    {
+      "root": "packageMy",
+      "pages": [
+        {
+          "path": "basic/index",
+          "style": {
+            "navigationBarTitleText": "基础信息"
+          }
+        }
+      ]
+    },
+    {
+      "root": "packageAlbum",
+      "pages": [
+        {
+          "path": "photo/index",
+          "style": {
+            "navigationBarTitleText": "我的相册"
+          }
+        }
+      ]
+    }
+  ],
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ba2636",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "static/home.png",
+        "selectedIconPath": "static/home-active.png"
+      },
+      {
+        "pagePath": "pages/album/index",
+        "text": "相册",
+        "iconPath": "static/album.png",
+        "selectedIconPath": "static/album-active.png"
+      },
+      {
+        "pagePath": "pages/order/index",
+        "text": "订单",
+        "iconPath": "static/order.png",
+        "selectedIconPath": "static/order-active.png"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "text": "我的",
+        "iconPath": "static/my.png",
+        "selectedIconPath": "static/my-active.png"
+      }
+]
+  },
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#FFF",
+		"backgroundColor": "#FFF"
+	},
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+            "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
+            "^u--(.*)": "uview-plus/components/u-$1/u-$1.vue",
+            "^up-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+            "^u-([^-].*)": "uview-plus/components/u-$1/u-$1.vue"
+    }
+  }
+}
