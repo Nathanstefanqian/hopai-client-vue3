@@ -7,8 +7,8 @@
     </div>
     <div class="detail-item">
       <div class="detail-item-header">拍摄地点</div>
-      <div class="detail-item-input" @click="showAreaPicker = true">{{ formData.area || '省-市-区/县' }}</div>
-      <input v-model="formData.address" class="detail-item-input" placeholder="详细地址" />
+      <div class="detail-item-input" @click="showMapPicker = true">{{ formData.area || '点击选择位置' }}</div>
+      <input v-model="formData.address" class="detail-item-input" placeholder="详细地址" disabled />
     </div>
     <div class="detail-item">
       <div class="detail-item-header">备注</div>
@@ -24,19 +24,23 @@
       <div class="btn mr-20rpx" @click="handlePrev">上一步</div>
       <div class="btn btn1" @click="handleNext">下一步</div>
     </div>
-    <AreaPicker v-model="showAreaPicker" @confirm="handleAreaConfirm" />
+    <MapPicker v-model:show="showMapPicker" @confirm="handleLocationConfirm" />
   </div>
 </template>
 
 <script setup lang="ts">
-const showAreaPicker = ref(false);
+import MapPicker from '@/components/home/MapPicker.vue';
+
+const showMapPicker = ref(false);
 
 const formData = reactive({
   name: '',
   phone: '',
   area: '',
   address: '',
-  remark: ''
+  remark: '',
+  latitude: 0,
+  longitude: 0
 });
 
 const errors = reactive({
@@ -54,9 +58,12 @@ const validatePhone = () => {
   }
 };
 
-const handleAreaConfirm = (area: string[]) => {
-  formData.area = area.join('-');
-  showAreaPicker.value = false;
+const handleLocationConfirm = (location: any) => {
+  const { address_component, address } = location;
+  formData.area = `${address_component.province}-${address_component.city}-${address_component.district}`;
+  formData.address = address;
+  formData.latitude = location.latitude;
+  formData.longitude = location.longitude;
 };
 
 const handlePrev = () => {

@@ -11,6 +11,7 @@ declare module 'vue' {
     AreaPicker: typeof import('./src/components/home/AreaPicker.vue')['default']
     ImgCrop: typeof import('./src/components/img-crop/img-crop.vue')['default']
     LjWaterfall: typeof import('./src/components/lj-waterfall/lj-waterfall.vue')['default']
+    MapPicker: typeof import('./src/components/home/MapPicker.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Tab: typeof import('./src/components/my/Tab.vue')['default']
