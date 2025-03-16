@@ -20,45 +20,6 @@
     </div>
     <div class="photographer-main">
       <scroll-view class="photographer-main-scroll-view" scroll-y="true">
-        <div class="photographer-main-card">
-          <div class="card">
-            <div class="card-1">
-              <div class="left">
-                <image class="avatar" :src="netConfig.picURL + '/static/my/avatar.jpg'" />
-                <div class="card-1-info">
-                  <div class="name">钱卢骏</div>
-                  <div class="score">
-                    <up-rate :count="5" active-color="#F8C646" disabled></up-rate>
-                    <span class="ml-10rpx score-text">4.5分</span>
-                  </div>
-                </div>
-              </div>
-              <div class="right">
-                <up-checkbox usedAlone shape="circle" activeColor="#ba2636"/>
-              </div>
-            </div>
-            <div class="card-2">
-              <div>
-                <span>拍摄设备：</span>
-                <span>尼康a62/索尼a7m3</span>
-              </div>
-              <div>
-                <span>拍摄镜头：</span>
-                <span>85定焦/50定焦/35定焦</span>
-              </div>
-            </div>
-            <div class="card-3">
-              <div class="left">
-                <span>约拍价</span>
-                <span class="price">
-                  <span style="font-size: 32rpx"> ￥ </span> 99.00</span>
-              </div>
-              <div class="right">
-                TA的主页
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="photographer-main-card" v-for="item,index in 5" :key="index">
           <div class="card">
             <div class="card-1">

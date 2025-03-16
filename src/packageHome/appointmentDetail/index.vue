@@ -9,6 +9,7 @@
       <div class="detail-item-header">拍摄地点</div>
       <div class="detail-item-input" @click="handleChooseLocation">{{ formData.area || '点击选择位置' }}</div>
       <input v-model="formData.address" class="detail-item-input" placeholder="详细地址" disabled />
+      <input v-model="formData.areaCode" class="detail-item-input" placeholder="区域编码" disabled />
     </div>
     <div class="detail-item">
       <div class="detail-item-header">备注</div>
@@ -28,6 +29,9 @@
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue';
+import { getLocationInfo } from '@/utils/location';
+
 const formData = reactive({
   name: '',
   phone: '',
@@ -35,7 +39,8 @@ const formData = reactive({
   address: '',
   remark: '',
   latitude: 0,
-  longitude: 0
+  longitude: 0,
+  areaCode: ''
 });
 
 const errors = reactive({
@@ -55,12 +60,21 @@ const validatePhone = () => {
 
 const handleChooseLocation = () => {
   uni.chooseLocation({
-    success: (res) => {
+    success: async (res) => {
       const { name, address, latitude, longitude } = res;
-      formData.area = name;
-      formData.address = address;
-      formData.latitude = latitude;
-      formData.longitude = longitude;
+      try {
+        const locationInfo = await getLocationInfo(latitude, longitude);
+        formData.area = name;
+        formData.address = address;
+        formData.latitude = latitude;
+        formData.longitude = longitude;
+        formData.areaCode = locationInfo.areaCode;
+      } catch (error) {
+        uni.showToast({
+          title: '获取地理位置信息失败',
+          icon: 'none'
+        });
+      }
     },
     fail: () => {
       uni.showToast({

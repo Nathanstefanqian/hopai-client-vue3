@@ -27,3 +27,7 @@ export const getSpuDetail = (id: any) => {
 export const getDetail = () => {
   return request.get('/product/category/list')
 }
+
+export const getPhotographerUser = (data: any) => {
+  return request.post('/member/photographer/listPhotographerUser', data)
+}
