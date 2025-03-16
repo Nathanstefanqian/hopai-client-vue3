@@ -7,7 +7,7 @@
     </div>
     <div class="detail-item">
       <div class="detail-item-header">拍摄地点</div>
-      <div class="detail-item-input" @click="showMapPicker = true">{{ formData.area || '点击选择位置' }}</div>
+      <div class="detail-item-input" @click="handleChooseLocation">{{ formData.area || '点击选择位置' }}</div>
       <input v-model="formData.address" class="detail-item-input" placeholder="详细地址" disabled />
     </div>
     <div class="detail-item">
@@ -24,15 +24,10 @@
       <div class="btn mr-20rpx" @click="handlePrev">上一步</div>
       <div class="btn btn1" @click="handleNext">下一步</div>
     </div>
-    <MapPicker v-model:show="showMapPicker" @confirm="handleLocationConfirm" />
   </div>
 </template>
 
 <script setup lang="ts">
-import MapPicker from '@/components/home/MapPicker.vue';
-
-const showMapPicker = ref(false);
-
 const formData = reactive({
   name: '',
   phone: '',
@@ -58,12 +53,22 @@ const validatePhone = () => {
   }
 };
 
-const handleLocationConfirm = (location: any) => {
-  const { address_component, address } = location;
-  formData.area = `${address_component.province}-${address_component.city}-${address_component.district}`;
-  formData.address = address;
-  formData.latitude = location.latitude;
-  formData.longitude = location.longitude;
+const handleChooseLocation = () => {
+  uni.chooseLocation({
+    success: (res) => {
+      const { name, address, latitude, longitude } = res;
+      formData.area = name;
+      formData.address = address;
+      formData.latitude = latitude;
+      formData.longitude = longitude;
+    },
+    fail: () => {
+      uni.showToast({
+        title: '选择位置失败',
+        icon: 'none'
+      });
+    }
+  });
 };
 
 const handlePrev = () => {
