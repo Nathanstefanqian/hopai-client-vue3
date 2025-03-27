@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { getAlbumPhoto} from '@/api/album'
+import { getPhotoPage } from '@/api/home/photo'
 // import { useSts } from '@/hooks/useOss'
 
 // 定义页面参数
@@ -42,7 +42,7 @@ const isSelected = ref<boolean>(false);
 const fetchAlbumPhotos = async () => {
   try {
     loading.value = true;
-    const res = await getAlbumPhoto({ id: id.value, pageNo: pageNo.value, pageSize: pageSize.value, status: [0] });
+    const res = await getPhotoPage({ albumId: id.value, pageNo: pageNo.value, pageSize: pageSize.value });
     const processedList = await Promise.all(
       res.data.list.map(async (item: any) => {
         const baseUrl = item.picUrl;

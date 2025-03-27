@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
 import { getLocationInfo } from '@/utils/location';
 
 const formData = reactive({
@@ -41,6 +40,13 @@ const formData = reactive({
   latitude: 0,
   longitude: 0,
   areaCode: ''
+});
+
+onMounted(() => {
+  const cachedInfo = uni.getStorageSync('contactInfo');
+  if (cachedInfo) {
+    Object.assign(formData, cachedInfo);
+  }
 });
 
 const errors = reactive({
@@ -69,6 +75,7 @@ const handleChooseLocation = () => {
         formData.latitude = latitude;
         formData.longitude = longitude;
         formData.areaCode = locationInfo.areaCode;
+        uni.setStorageSync('selectedAreaCode', locationInfo.areaCode);
       } catch (error) {
         uni.showToast({
           title: '获取地理位置信息失败',
@@ -90,6 +97,58 @@ const handlePrev = () => {
 };
 
 const handleNext = () => {
+  // 验证表单
+  validatePhone();
+  
+  // 检查各个必填字段
+  if (!formData.name) {
+    uni.showToast({
+      title: '请填写姓名',
+      icon: 'none'
+    });
+    return;
+  }
+  
+  if (!formData.phone) {
+    uni.showToast({
+      title: '请填写手机号',
+      icon: 'none'
+    });
+    return;
+  }
+  
+  if (errors.phone) {
+    uni.showToast({
+      title: errors.phone,
+      icon: 'none'
+    });
+    return;
+  }
+  
+  if (!formData.area) {
+    uni.showToast({
+      title: '请选择拍摄地点',
+      icon: 'none'
+    });
+    return;
+  }
+  
+  if (!formData.address) {
+    uni.showToast({
+      title: '请填写详细地址',
+      icon: 'none'
+    });
+    return;
+  }
+  // 存储联系人信息
+  uni.setStorageSync('contactInfo', {
+    name: formData.name,
+    phone: formData.phone,
+    area: formData.area,
+    address: formData.address,
+    areaCode: formData.areaCode,
+    remark: formData.remark
+  });
   uni.navigateTo({
     url: '/packageHome/appointment/photographer'
   });

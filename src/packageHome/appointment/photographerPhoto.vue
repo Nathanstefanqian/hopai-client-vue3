@@ -6,7 +6,7 @@
       </div>
       <up-skeleton :rows="3" :loading="loading">
         <div class="album-name-content" v-if="album">
-          <span>{{ album.title }}</span>
+          <span>{{ album.title ? album.title : '无标题' }}</span>
         </div>
       </up-skeleton>
     </div>
@@ -26,8 +26,8 @@
 </template>
 
 <script setup lang="ts">
-// import { getPhotoPage, getAlbum } from '@/api/my'
-
+import { getPhotoPage } from '@/api/home/photo'
+import { getPhotographerAlbumDetail } from '@/api/home/album'
 const photo = ref<any>([])
 const album = ref()
 const loading = ref(false)
@@ -44,19 +44,12 @@ const previewPhoto = (picUrl: string) => {
 const getData = async () => {
   loading.value = true
   try {
-    const mockAlbums = [
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/3.jpg', title: '校园写真', photoNum: 7 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg', title: '校园写真', photoNum: 4 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/7.jpg', title: '校园写真', photoNum: 2 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/8.jpg', title: '校园写真', photoNum: 9 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/5.jpg', title: '校园写真', photoNum: 1 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/6.jpg', title: '校园写真', photoNum: 8 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/2.jpg', title: '校园写真', photoNum: 5 },
-      { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/4.jpg', title: '校园写真', photoNum: 3 }
-    ]
-    const selectedAlbum = mockAlbums[0]
-    photo.value = mockAlbums.map(item => ({ url: item.picUrl }))
-    album.value = selectedAlbum
+    const albumRes = await getPhotographerAlbumDetail(id.value)
+    album.value = albumRes.data
+    const photoRes = await getPhotoPage(1,100,id.value)
+    photo.value = photoRes.data.list.map((item: any) => ({
+      url: item.url
+    }))
   } finally {
     loading.value = false
   }

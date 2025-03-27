@@ -8,8 +8,8 @@
         <div class="my-main-info-desc">
           <div class="my-main-info-desc-left">
             <div class="my-main-info-desc-left-top">
-              <image @click="previewPicture" :src="user.avatar ? user.avatar : netConfig.picURL + '/static/my/avatar.jpg'" mode="aspectFill" class="avatar" />
-              <span style="font-size: 40rpx; font-weight: 400;"> {{ isLoggedIn ? user.nickname : '未登录' }}</span>
+              <image @click="previewPicture" :src="user?.avatar || netConfig.picURL + '/static/my/avatar.jpg'" mode="aspectFill" class="avatar" @error="handleImageError" />
+              <span style="font-size: 40rpx; font-weight: 400;"> {{ isLoggedIn ? user?.nickname || '未设置昵称' : '未登录' }}</span>
             </div>
             <div class="my-main-info-desc-left-bottom">
               <div v-html="babyBirthdayDisplay" class="date"></div>
@@ -57,6 +57,12 @@ const weddingAnniversaryDisplay = ref('');
 const birthdayDisplay = ref('');
 
 const { showModal } = useNotification()
+
+// 下拉刷新处理函数
+onPullDownRefresh(async () => {
+  await getData();
+  uni.stopPullDownRefresh();
+})
 
 const handleLogin = () => {
   if(!isLoggedIn) {
@@ -130,15 +136,18 @@ const formatDateDisplay = (date: string | number | null, type: string) => {
 const getData = async () => {
   loading.value = true;
   try {
-    user.value = (await getUserInfo()).data;
+    const response = await getUserInfo();
+    if (!response?.data) return;
+    
+    user.value = response.data;
 
     // 防止生日为 null
-    if (user.value.birthday == null) user.value.birthday = dayjs().valueOf();
+    if (user?.value?.birthday == null) user.value.birthday = dayjs().valueOf();
 
     // 格式化宝宝生日、结婚纪念日、生日信息
-    babyBirthdayDisplay.value = formatDateDisplay(user.value.babyBirthday, '宝宝生日');
-    weddingAnniversaryDisplay.value = formatDateDisplay(user.value.weddingAnniversary, '结婚纪念日');
-    birthdayDisplay.value = formatDateDisplay(user.value.birthday, '生日');
+    babyBirthdayDisplay.value = formatDateDisplay(user.value?.babyBirthday ?? null, '宝宝生日');
+    weddingAnniversaryDisplay.value = formatDateDisplay(user.value?.weddingAnniversary ?? null, '结婚纪念日');
+    birthdayDisplay.value = formatDateDisplay(user.value?.birthday ?? null, '生日')
   } finally {
     loading.value = false;
   }
@@ -154,6 +163,9 @@ const tabItems = [
 onMounted(async () => {
   await getData();
 });
+const handleImageError = () => {
+  user.value.avatar = netConfig.picURL + '/static/my/avatar.jpg';
+};
 </script>
 
 <style lang="scss" scoped>

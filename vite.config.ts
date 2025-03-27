@@ -20,6 +20,11 @@ export default defineConfig({
           'vue',
           'uni-app',
           'pinia',
+          {
+            'pingpp-js': [
+              ['default', 'pingpp']
+            ]
+          }
       ],
       dts: 'auto-imports.d.ts',
   }),

@@ -1,6 +1,6 @@
 <template>
   <div class="sku">
-    <div class="card" v-for="(item,index) in productList" :key="index">
+    <div class="card" v-for="(item,index) in productList" :key="index" @click="handleSpu(item.id)">
       <div class="card-top">
         <image :src="item.picUrl" class="w-330rpx h-400rpx card-top-image" mode="aspectFill" />
         <div class="tag">{{ item.name }}</div>
@@ -31,6 +31,12 @@ onLoad(async (options: any) => {
     }
   }
 });
+
+const handleSpu = (id: number) => {
+  uni.navigateTo({
+    url: `/packageHome/spu/index?id=${id}`
+  })
+}
 </script>
 
 <style lang="scss" scoped>

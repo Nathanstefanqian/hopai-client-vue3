@@ -6,17 +6,17 @@
       </div>
       <div class="card1-main">
         <div class="left">
-          <image src="https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg" class="left-image" mode="aspectFill" />
+          <image :src="orderData.spuInfo?.picUrl || ''" class="left-image" mode="aspectFill" />
           <div class="left-desc">
-            <div class="title">校园写真</div>
-            <div class="desc">2组/12精修、拍摄2小时</div>
+            <div class="title">{{ orderData.spuInfo?.introduction || '' }}</div>
+            <div class="desc">{{ orderData.spuInfo?.rawCount || 0 }}张底片/{{ orderData.spuInfo?.retouchedImageCount || 0 }}张精修、拍摄{{ orderData.spuInfo?.shootingTime || 0 }}小时</div>
             <div class="tag">
-              <span class="tag-btn">风格写真</span>
+              <span class="tag-btn">{{ orderData.spuInfo?.name || '' }}</span>
             </div>
           </div>
         </div>
         <div class="right">
-          <div class="price">￥ 399.00</div>
+          <div class="price">￥ {{ orderData.spuInfo.marketPrice / 100 || 0 }}</div>
         </div>
       </div>
     </div>
@@ -25,27 +25,27 @@
       <div class="card2-main">
          <div class="card2-main-item">
           <div class="left">联系人</div>
-          <div class="right">李先生</div>
+          <div class="right">{{ orderData.contactInfo.name }}</div>
          </div>
          <div class="card2-main-item">
           <div class="left">手机号</div>
-          <div class="right">18372769872</div>
+          <div class="right">{{ orderData.contactInfo.phone }}</div>
          </div>
          <div class="card2-main-item">
           <div class="left">时间</div>
-          <div class="right">2023.12.27 9:00 - 11:00</div>
+          <div class="right">{{ formatDateTime(orderData.appointmentStart) }} - {{ formatDateTime(orderData.appointmentEnd) }}</div>
          </div>
          <div class="card2-main-item">
           <div class="left">地点</div>
-          <div class="right">江苏省常州市新北区婚姻登记处</div>
+          <div class="right">{{ orderData.contactInfo.area }} {{ orderData.contactInfo.address }}</div>
          </div>
          <div class="card2-main-item">
           <div class="left">摄影师</div>
-          <div class="right">李先生  158****1271</div>
+          <div class="right">{{ orderData.photographerInfo?.nickname }} {{ orderData.photographerInfo?.phone }}</div>
          </div>
          <div class="card2-main-item">
           <div class="left">备注</div>
-          <div class="right">麻烦摄影师多用85镜头拍，后期修图效果要有电影感。</div>
+          <div class="right">{{ orderData.contactInfo.remark || '暂无' }}</div>
          </div>
          
       </div>
@@ -54,8 +54,7 @@
       <div class="left">
         <span class="left-1">实付款</span>
         <span class="left-2">￥ </span>
-        <span class="left-3">99</span>
-        <div class="left-4">.00</div>
+        <span class="left-3">{{ orderData.photographerInfo.price || 0 }}</span>
       </div>
       <div class="right" @click="handlePay">立即支付</div>
      </div>
@@ -65,12 +64,163 @@
 
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
-const handlePay = () => {
-  uni.navigateTo({
-    url: '/packageHome/appointment/success'
-  })
-}
+import { createUserOrders, submitPayOrders } from '@/api/order';
+import pingpp from 'pingpp-js'
+import { useUserStore } from '@/pinia/user';
 
+const orderData = ref<any>({
+  spuInfo: null,
+  appointmentStart: '',
+  appointmentEnd: '',
+  contactInfo: {
+    name: '',
+    phone: '',
+    area: '',
+    address: '',
+    areaCode: '',
+    remark: ''
+  },
+  photographerId: '',
+  photographerInfo: null,
+  totalAmount: 0
+});
+
+const formatDateTime = (timestamp: number) => {
+  const date = new Date(timestamp);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
+
+const loadOrderData = () => {
+  // 从缓存中获取各个页面的数据
+  const spuInfo = uni.getStorageSync('selectedSpu');
+  const appointmentTime = uni.getStorageSync('appointmentTime');
+  const contactInfo = uni.getStorageSync('contactInfo');
+  const photographerInfo = uni.getStorageSync('selectedPhotographer');
+
+  if (spuInfo) {
+     orderData.value.spuInfo = spuInfo;
+  }
+
+  if (photographerInfo) {
+    orderData.value.photographerId = photographerInfo.userId;
+    orderData.value.photographerInfo = photographerInfo;
+    orderData.value.totalAmount = parseFloat(photographerInfo.price) * 100 || 0;
+  }
+
+  if (appointmentTime) {
+    // 保存时间戳用于提交订单
+    orderData.value.appointmentStart = new Date(appointmentTime.start).getTime();
+    orderData.value.appointmentEnd = new Date(appointmentTime.end).getTime();
+  }
+
+  if (contactInfo) {
+    orderData.value.contactInfo = contactInfo;
+  }
+
+  if (photographerInfo) {
+    orderData.value.photographerId = photographerInfo.userId;
+    orderData.value.photographerInfo = photographerInfo;
+  }
+};
+
+const userStore = useUserStore();
+const handlePay = async () => {
+  const userInfo = userStore.userInfo;
+  if (!userInfo) {
+    uni.showToast({
+      title: '请先登录',
+      icon: 'none'
+    });
+    return;
+  }
+  try {
+    // 这里添加创建订单的API调用
+    // 预留一个字段，用来存储具体的定位信息
+    const orderParams = {
+      spuId: orderData.value.spuInfo?.id,
+      photographerId: orderData.value.photographerId,
+      appointmentStartTime: orderData.value.appointmentStart,
+      appointmentEndTime: orderData.value.appointmentEnd,
+      memberName: orderData.value.contactInfo.name,
+      memberPhone: orderData.value.contactInfo.phone,
+      location: orderData.value.contactInfo.address + ' ' + orderData.value.contactInfo.area,
+      orderAmt: orderData.value.totalAmount / 100,
+      remark: orderData.value.contactInfo.remark
+    };
+    console.log('orderParams', orderParams);
+    const data: any = await createUserOrders(orderParams)
+    console.log('提交订单', data)
+    if(!data.data) {
+      uni.showToast({
+        title: data.msg,
+        icon: "none",
+      });
+      return
+    }
+    uni.showToast({
+      title: '创建订单成功',
+      icon: "success"
+    })
+    const payParams = {
+      id: data.data,
+      channelCode: 'yeepay_wx_lite_ofl',
+      openId: userInfo.openid
+    }
+    setTimeout(async () => {
+      const payData: any = await submitPayOrders(payParams)
+      if(!payData.data) {
+        uni.showToast({
+            title: payData.msg,
+            icon: "error",
+          });
+          return;
+      }
+      pingpp.createPayment(payData.data.charges.data[0], (result: any, err: any) => {
+        if (result == "success") {
+          uni.showToast({
+                title: "支付成功",
+                icon: "success",
+          })
+        } else if (result === "fail") {
+          uni.showToast({
+            title: "支付失败",
+            icon: "error",
+          });
+        } else if (result === "cancel") {
+          uni.showToast({
+            title: "支付取消",
+            icon: "error",
+          });
+        }
+    },2000)
+
+
+
+
+
+
+  //   // 临时跳转到成功页面
+  //   uni.navigateTo({
+  //     url: '/packageHome/appointment/success'
+  //   });
+  // } catch (error) {
+  //   uni.showToast({
+  //     title: '创建订单失败',
+  //     icon: 'none'
+  //   });
+  // }
+    })
+  } catch (error) {
+    uni.showToast({
+      title: '创建订单失败',
+      icon: 'none'
+    });
+  }
+};
+
+onMounted(() => {
+  loadOrderData();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -99,8 +249,8 @@ const handlePay = () => {
         display: flex;
 
         &-image {
-          width: 180rpx;
-          height: 100%;
+          width: 160rpx;
+          height: 200rpx;
           border-radius: 12rpx;
           margin-right: 20rpx;
         }
@@ -117,12 +267,13 @@ const handlePay = () => {
             font-size: 24rpx;
             color: rgba(40, 40, 40, 0.50);
             font-weight: 550;
-            margin-bottom: 30rpx;
+            margin-bottom: 20rpx;
           }
           .tag {
             &-btn {
               display: inline-flex;
               padding: 8rpx 16rpx;
+              font-size: 24rpx;
               border-radius: 12rpx;
               background-color: rgba(249, 233, 132, 0.90);
             }

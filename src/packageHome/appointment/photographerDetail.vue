@@ -5,27 +5,27 @@
       <div class="photographer-main">
         <div class="photographer-main-1">
           <div class="main-1">
-            <image class="avatar" :src="netConfig.picURL + '/static/my/avatar.jpg'" />
+            <image class="avatar" :src="photographerInfo.avatar || netConfig.picURL + '/static/my/avatar.jpg'" />
             <div class="card-1-info">
-              <div class="name">钱卢骏</div>
+              <div class="name">{{ photographerInfo.nickname || '摄影师' }}</div>
               <div class="score">
-                <up-rate :count="5" active-color="#F8C646" disabled></up-rate>
-                <span class="ml-10rpx score-text">4.5分</span>
+                <up-rate :count="5" active-color="#ba2636" readonly v-model="photographerInfo.rateValue"></up-rate>
+                <span class="ml-10rpx score-text">{{ Number(photographerInfo.rateValue || 0).toFixed(1) }}分</span>
               </div>
             </div>
           </div>
           <div class="main-2">
             <div class="main-2-item">
               <div class="title">拍摄设备：</div>
-              <div class="info">尼康a62 / 索尼a7m3</div>
+              <div class="info">{{ photographerInfo.camera || '暂无' }}</div>
             </div>
             <div class="main-2-item">
               <div class="title">镜头设备：</div>
-              <div class="info">尼康a62 / 索尼a7m3</div>
+              <div class="info">{{ photographerInfo.zoomLens || '暂无' }}</div>
             </div>
             <div class="main-2-item">
               <div class="title">个人简介：</div>
-              <div class="info">尼康a62 / 索尼a7m3</div>
+              <div class="info">{{ photographerInfo.introduction || '暂无' }}</div>
             </div>
           </div>
         </div>
@@ -41,36 +41,42 @@
             </div>
           </div>
           <div class="main-body">
-            <div class="my-main-basic-album" v-if="currentTab === 0">
-              <div class="album" v-for="item,index in album" :key="index" v-if="album.length" @click="handlePhoto">
-                <image class="album-image" :src="item.picUrl || netConfig.picURL + '/static/my/gf5.jpg'" mode="aspectFill" />
-                <div class="album-desc">
-                  <div class="title">{{ item.title }}</div>
-                  <div class="op">
-                    <span class="number">{{ item.photoNum }}</span>
-                    <span class="edit">编辑</span>
+            <up-skeleton :loading="loading" :rows="3" v-if="currentTab === 0">
+              <div class="my-main-basic-album" v-if="currentTab === 0">
+                  <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无相册" />
+                  <div class="album" v-for="item,index in album" :key="index" v-if="album.length" @click="handlePhoto(item.id)">
+                  <image class="album-image" :src="item.picUrl || netConfig.picURL + '/static/my/gf5.jpg'" mode="aspectFill" />
+                  <div class="album-desc">
+                    <div class="title">{{ item.title }}</div>
+                    <div class="op">
+                      <span class="number">{{ item.photoNum }}</span>
+                      <span class="edit">编辑</span>
+                    </div>
+                  </div>
+                  </div>
+              </div>
+            </up-skeleton>
+            <up-skeleton :loading="loading" :rows="3" v-if="currentTab === 1">
+              <div class="reviews" v-if="currentTab === 1">
+                <EmptyState v-if="reviews.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无评价" />
+                <div class="review-item" v-for="(review, index) in reviews" :key="index">
+                  <div class="review-header">
+                    <image class="reviewer-avatar" :src="netConfig.picURL + '/static/my/avatar.jpg'" mode="aspectFill" />
+                    <div class="reviewer-info">
+                      <div class="reviewer-name">{{ review.nickname }}</div>
+                      <div class="review-date">{{ formatDate(review.createTime) }}</div>
+                    </div>
+                  </div>
+                  <div class="review-content">
+                    {{ review.content }}
+                  </div>
+                  <div class="review-score">
+                    <up-rate :count="5" active-color="#F8C646" readonly v-model="review.rate"></up-rate>
+                    <span class="score-text">{{ review.rate }}分</span>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="reviews" v-if="currentTab === 1">
-              <div class="review-item" v-for="(review, index) in reviews" :key="index">
-                <div class="review-header">
-                  <image class="reviewer-avatar" :src="review.avatar" mode="aspectFill" />
-                  <div class="reviewer-info">
-                    <div class="reviewer-name">{{ review.name }}</div>
-                    <div class="review-date">{{ review.date }}</div>
-                  </div>
-                </div>
-                <div class="review-content">
-                  {{ review.content }}
-                </div>
-                <div class="review-score">
-                  <up-rate :count="5" active-color="#F8C646" disabled :value="review.score"></up-rate>
-                  <span class="score-text">{{ review.score }}分</span>
-                </div>
-              </div>
-            </div>
+            </up-skeleton>
           </div>
         </div>
       </div>
@@ -80,53 +86,96 @@
 
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
-
+import { getPhotographerUserDetail } from '@/api/home';
+import { getPhotographerAlbumPage } from '@/api/home/album';
+import { getPhotoUrl } from '@/api/home/photo';
+import EmptyState from '@/components/common/EmptyState.vue';
 const currentTab = ref(0);
+const userId = ref('');
+const photographerInfo = ref<any>({});
+const album = ref<any[]>([]);
+const pageNo = ref(1);
+const pageSize = ref(10);
+const loading = ref(false);
+
+onLoad(async (options: any) => {
+  if (options.userId) {
+    userId.value = options.userId;
+    try {
+      loading.value = true;
+      const res = await getPhotographerUserDetail(userId.value);
+      photographerInfo.value = res.data;
+      // 获取摄影师相册数据
+      const albumRes = await getPhotographerAlbumPage({
+        pageNo: pageNo.value,
+        pageSize: pageSize.value,
+        userId: userId.value
+      });
+      const list = albumRes.data.list || [];
+      // 获取每个相册的封面图片URL
+      const albumWithUrls = await Promise.all(list.map(async (item: any) => {
+        if (item.coverPhotoId) {
+          const photoRes = await getPhotoUrl(item.coverPhotoId);
+          return { ...item, picUrl: photoRes.data.url };
+        }
+        return item;
+      }));
+      album.value = albumWithUrls;
+    } catch (error) {
+      console.error('获取数据失败:', error);
+    } finally {
+      loading.value = false;
+    }
+  }
+});
 
 const switchTab = (index: number) => {
   currentTab.value = index;
 };
 
-const handlePhoto = () => {
-  uni.navigateTo({ url: `/packageHome/appointment/photographerPhoto?id=1` })
-  // 跳转到相册详情页
-  // console.log('跳转到相册详情页');
+const handlePhoto = (albumId: string) => {
+  uni.navigateTo({ url: `/packageHome/appointment/photographerPhoto?id=${albumId}` })
 };
 
-const album = [
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/3.jpg', title: 'Adventure', photoNum: 7 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg', title: 'Nature', photoNum: 4 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/7.jpg', title: 'Portraits', photoNum: 2 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/8.jpg', title: 'Sunsets', photoNum: 9 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/5.jpg', title: 'Abstract', photoNum: 1 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/6.jpg', title: 'Landscapes', photoNum: 8 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/2.jpg', title: 'Architecture', photoNum: 5 },
-  { picUrl: 'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/4.jpg', title: 'City Life', photoNum: 3 }
-];
 
-const reviews = [
-  {
-    avatar: netConfig.picURL + '/static/my/avatar.jpg',
-    name: '李小姐',
-    date: '2023-12-29',
-    content: '摄影师很专业，很负责。开始约定了时间，和摄影师沟通后给调整了',
-    score: 4.5
-  },
-  {
-    avatar: netConfig.picURL + '/static/my/avatar.jpg',
-    name: '你好呀',
-    date: '2023-12-29',
-    content: '很方便！',
-    score: 4.5
-  },
-  {
-    avatar: netConfig.picURL + '/static/my/avatar.jpg',
-    name: '明天就要嫁人啦',
-    date: '2023-12-29',
-    content: '选了很多家摄影的店，不是档期不符合就是收费太离谱。本来去线下约了一家，后面朋友说说他家拍的质量很差，上次还把我朋友的档期给延期了，差点没赶上婚礼。我果断退款选择合拍，前后只需要一个星期就完美出片和相册到了，而且收费也合理，原宝！',
-    score: 4.5
+import { getPhotographerEvaluatePage } from '@/api/home';
+
+const reviews = ref<any[]>([]);
+const evaluatePageNo = ref(1);
+const evaluatePageSize = ref(100);
+const hasLoadedReviews = ref(false);
+
+const fetchReviews = async () => {
+  try {
+    loading.value = true;
+    const res = await getPhotographerEvaluatePage(
+evaluatePageNo.value,
+evaluatePageSize.value,
+  userId.value);
+    reviews.value = res.data.list || [];
+    hasLoadedReviews.value = true;
+  } catch (error) {
+    console.error('获取评价数据失败:', error);
+  } finally {
+    loading.value = false;
   }
-];
+};
+
+watch(currentTab, (newVal) => {
+  if (newVal === 1 && !hasLoadedReviews.value) {
+    fetchReviews();
+  }
+});
+
+const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -361,3 +410,5 @@ const reviews = [
   }
 }
 </style>
+
+import EmptyState from '@/components/common/EmptyState.vue';

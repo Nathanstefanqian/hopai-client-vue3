@@ -1,7 +1,7 @@
 <style lang="scss">
 @import "uview-plus/index.scss";
 * {
-  font-weight: 300;
+  font-weight: 400;
 }
 </style>
 <script setup lang="ts">

@@ -74,10 +74,9 @@
         </div>
       </div>
     </div>
-    <div class="appointment-divider2"></div>
     <div class="appointment-footer">
-      <div class="appointment-footer-btn mr-20rpx" @click="handlePre">上一步</div>
-      <div class="appointment-footer-btn btn" @click="handleNext">下一步</div>
+      <div class="btn mr-20rpx" @click="handlePre">上一步</div>
+      <div class="btn1 btn" @click="handleNext">下一步</div>
     </div>
     <up-datetime-picker
       :show="showCalendar"
@@ -237,6 +236,11 @@ const handleNext = () => {
     });
     return;
   }
+  // 存储预约时间信息
+  uni.setStorageSync('appointmentTime', {
+    start: formatDate(selectedDate.value, 'YYYY-MM-DD HH:mm'),
+    end: formatDate(selectedEndTime.value, 'YYYY-MM-DD HH:mm')
+  });
   uni.navigateTo({ url: '/packageHome/appointmentDetail/index' });
 };
 
@@ -390,7 +394,7 @@ const confirmDate = () => {
 
     &-timeline {
       display: flex;
-      height: 55vh;
+      height: 60vh;
 
       .left {
         display: flex;
@@ -459,21 +463,29 @@ const confirmDate = () => {
 
   &-footer {
     display: flex;
-    justify-content: center;
-    padding: 32rpx;
-    &-btn {
-      width: 320rpx;
-      height: 88rpx;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 32rpx 64rpx 64rpx 64rpx;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 180rpx;
+    width: 100vw;
+    border-top: 1rpx solid rgba(40, 40, 40, 0.10);
+
+    .btn {
+      width: 300rpx;
+      height: 80rpx;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28rpx;
-      border-radius: 44rpx;
-      background-color: #f8f8f8;
-      &.btn {
-        background-color: #ba2636;
-        color: #fff;
-      }
+    border-radius: 12rpx;
+    border: 1rpx solid #282828;
+    }
+
+    .btn1 {
+      color: #fff;
+      background-color: #282828;
     }
   }
 }

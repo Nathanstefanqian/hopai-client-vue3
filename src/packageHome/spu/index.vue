@@ -1,11 +1,11 @@
 <template>
   <div class="spu w-100vw">
-    <up-swiper class="spu-swiper" :list="spuDetail.sliderPicUrls" indicator circular height="900rpx" @change="(e: any)=> current = e.current">
+    <up-swiper v-if="spuDetail.sliderPicUrls?.length" class="spu-swiper" :list="spuDetail.sliderPicUrls" indicator circular height="900rpx" @change="(e: any)=> current = e.current">
       <template #indicator>
         <div class="indicator">
           <view
             class="indicator__dot"
-            v-for="(item, index) in list1"
+            v-for="(item, index) in spuDetail.sliderPicUrls"
             :key="index"
             :class="[index === current && 'indicator__dot--active']"
           >
@@ -24,7 +24,7 @@
                 <div class="title">{{ spuDetail.introduction }}</div>
                 <div class="price">
                   ￥
-                  <span class="price-num">{{ spuDetail.marketPrice / 100 }}元</span>
+                  <span class="price-num">{{ spuDetail.skus?.[0]?.price / 100 || 0 }}元</span>
                   起
                 </div>
             </div>
@@ -73,18 +73,9 @@
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
 import { getSpuDetail, getProductSpuPage, getDetail } from '@/api/home';
+import { useUserStore } from '@/pinia/user';
 
-const list1: string[] = [
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/1.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/2.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/3.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/4.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/5.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/6.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/7.jpg',
-  'https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/test/8.jpg'
-]
-const current = ref()
+const current = ref(0)
 const currentTab = ref(0)
 const spuDetail = ref<any>({})
 const descriptionUrls = ref([])
@@ -93,7 +84,7 @@ const serviceUrls = ref([])
 const card = computed(() => [
   { title: `${spuDetail.value.shootingTime}小时拍摄`, url: 'time.svg' },
   { title: `${spuDetail.value.retouchedImageCount}张精修`, url: 'refine.svg' },
-  { title: `${spuDetail.value.salesCount}+底图`, url: 'photo.svg' },
+  { title: `${spuDetail.value.rawCount}+底图`, url: 'photo.svg' },
   { title: `${spuDetail.value.deliveryTime}天内交付`, url: 'deliver.svg' }
 ])
 
@@ -101,9 +92,10 @@ onLoad(async (options: any) => {
   if (options.id) {
     try {
       const res = await getSpuDetail(Number(options.id))
-      console.log('商品详情数据:', res)
       spuDetail.value = res.data
-      console.log('打印', spuDetail.value)
+
+      // 存储categoryId到localStorage
+      uni.setStorageSync('selectedCategoryId', res.data.categoryId)
       // 解析description和service字段中的图片URL
       descriptionUrls.value = JSON.parse(res.data.description || '[]')
       serviceUrls.value = JSON.parse(res.data.service || '[]')
@@ -113,11 +105,24 @@ onLoad(async (options: any) => {
   }
 })
 
+const userStore = useUserStore();
 const handleAppointment = () => {
-  uni.navigateTo({
-    url:'/packageHome/appointment/index'
-  })
-}
+  if (!userStore.isLoggedIn) {
+    uni.showModal({
+      title: '提示',
+      content: '请先登录',
+      success: (res) => {
+        if (res.confirm) {
+          uni.navigateTo({ url: '/pages/auth/index' });
+        }
+      }
+    });
+    return;
+  }
+  // 存储选中的商品信息
+  uni.setStorageSync('selectedSpu', spuDetail.value);
+  uni.navigateTo({ url: '/packageHome/appointment/index' });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -196,10 +201,10 @@ const handleAppointment = () => {
           background: linear-gradient(180deg, rgba(248, 211, 211, 0.40) 0.26%, rgba(248, 211, 211, 0.00) 30.47%), #FFF;
           .tag {
             padding: 12rpx 16rpx;
+            align-items: center;
+            width: 120rpx;
             background-color: rgba(249, 233, 132, 0.90);
             border-radius: 8rpx;
-            height: 32rpx;
-            width: 108rpx;
             font-size: 28rpx;
             margin-bottom: 16rpx;
           }

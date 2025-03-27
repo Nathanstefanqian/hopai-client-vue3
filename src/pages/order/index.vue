@@ -8,82 +8,76 @@
           </div>
         </div>
     </scroll-view>
+    
+
     <up-skeleton :loading="loading" rows="3">
       <scroll-view 
         class="order-main-scrollview" 
         scroll-y="true"
         @scrolltolower="loadMore"
       >
-        <div class="order-main">
-          <div class="order-main-layout">
-            <div class="order-item" v-for="(item,index) in orderList" :key="item.id">
-              <div class="order-item-top">
-                <div class="order-item-top-header">
-                  <div class="header-one">
-                    <span class="mr-16rpx">订单号: {{ item.id }}</span>
-                    <image :src="netConfig.picURL + '/static/order/copy.svg'" class="w-40rpx h-40rpx"></image>
-                  </div>
-                  <div class="header-two">{{ orderStatusMap[item.orderStatus] }}</div>
+      <div class="order-main">
+        <div class="order-main-layout">
+          <EmptyState v-if="orderList.length === 0 && !loading" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无订单" />
+          <div class="order-item" v-for="(item,index) in orderList" :key="item.id" v-else>
+            <div class="order-item-top">
+              <div class="order-item-top-header">
+                <div class="header-one">
+                  <span class="mr-16rpx">订单号: {{ item.id }}</span>
+                  <image :src="netConfig.picURL + '/static/order/copy.svg'" class="w-40rpx h-40rpx" @click.stop="handleCopy(item.id)"></image>
                 </div>
-                <div class="order-item-top-divider"></div>
-                <div class="order-item-top-body">
-                  <div class="title">
-                    <span class="title-name">{{ item.spuDescribe }}</span>
-                    <span>￥ {{ item.orderAmt / 100 }}</span>
+                <div class="header-two" style="color: #ba2636;">{{ orderStatusMap[item.orderStatus] }}</div>
+              </div>
+              <div class="order-item-top-divider"></div>
+              <OrderItemBody :data="item" />
+            </div>
+            <div class="order-item-desc">
+              <div class="order-item-desc-one">
+                <div class="order-item-desc-one-item">
+                  <div class="title-item">时间</div>
+                  <div class="data-item">{{ formatDate(item.appointmentStartTime) }} - {{ formatDate(item.appointmentEndTime) }}</div>
+                </div>
+                <div class="order-item-desc-one-item">
+                  <div class="title-item">地点</div>
+                  <div class="data-item">{{ item.location }}</div>
+                </div>
+                <div class="order-item-desc-one-item">
+                  <div class="title-item">摄影师</div>
+                  <div class="data-item">
+                    <span class="mr-20rpx">{{ item.photographerName }}</span>
+                    <span class="mr-20rpx">{{ item.photographerPhone }}</span>
+                    <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
                   </div>
-                  <div class="detail">
-                    <span class="text-[#ba2636]">{{ item.photoNum }}</span> 组精修、
-                    拍摄 <span class="text-[#ba2636]">{{ Math.ceil((item.appointmentEndTime - item.appointmentStartTime) / (1000 * 60 * 60)) }}</span> 小时
+                </div>
+                <div class="order-item-desc-one-item">
+                  <div class="title-item">备注</div>
+                  <div class="data-item">
+                    <span>{{ item.remark }}</span>
                   </div>
-                  <div class="tag">{{ item.spuDescribe }}</div>
                 </div>
               </div>
-              <div class="order-item-desc">
-                <div class="order-item-desc-one">
-                  <div class="order-item-desc-one-item">
-                    <div class="title-item">时间</div>
-                    <div class="data-item">{{ formatDate(item.appointmentStartTime) }} - {{ formatDate(item.appointmentEndTime) }}</div>
-                  </div>
-                  <div class="order-item-desc-one-item">
-                    <div class="title-item">地点</div>
-                    <div class="data-item">{{ item.location }}</div>
-                  </div>
-                  <div class="order-item-desc-one-item">
-                    <div class="title-item">摄影师</div>
-                    <div class="data-item">
-                      <span class="mr-20rpx">{{ item.photographerName }}</span>
-                      <span class="mr-20rpx">{{ item.photographerPhone }}</span>
-                      <span class="mr-20rpx contakt">联系摄影师</span>
-                    </div>
-                  </div>
-                  <div class="order-item-desc-one-item">
-                    <div class="title-item">备注</div>
-                    <div class="data-item">
-                      <span>{{ item.remark }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="order-item-desc-two">
-                  <span class="mr-40rpx">实付款</span>
-                  <span>￥ {{ item.actualAmt / 100 || item.orderAmt / 100 }}</span>
-                </div>
-                <div class="order-item-desc-three">
-                  <div class="more" @click="handleMoreClick(item)">更多操作</div>
-                  <div class="right">
-                    <div class="comment" v-if="item.orderStatus === 3">立即评价</div>
-                    <div class="download" v-if="item.orderStatus === 3">下载照片</div>
-                    <div class="download disabled" v-if="item.orderStatus !== 3">无操作</div>
-                  </div>
-                </div>  
+              <div class="order-item-desc-two">
+                <span class="mr-40rpx">实付款</span>
+                <span>￥ {{ item.actualAmt / 100 || item.orderAmt / 100 }}</span>
               </div>
+              <div class="order-item-desc-three">
+                <div class="more" @click="handleMoreClick(item)">更多操作</div>
+                <div class="right">
+                  <div class="comment" v-if="item.orderStatus === 3">立即评价</div>
+                  <div class="download" v-if="item.orderStatus === 3" :class="{ disabled: true }">等待摄影师上传原图</div>
+                  <div class="download" v-if="item.orderStatus === 2" @click.stop="handleQrCode(item)">使用劵码</div>
+                  <div class="download disabled" v-if="item.orderStatus !== 3 && item.orderStatus !== 2">无操作</div>
+                </div>
+              </div>  
             </div>
           </div>
-          <div class="no-more" v-if="noMore">
-            <div class="line"></div>
-            <span>没有更多了</span>
-            <div class="line"></div>
-          </div>
         </div>
+        <div class="no-more" v-if="noMore && orderList.length">
+          <div class="line"></div>
+          <span>没有更多了</span>
+          <div class="line"></div>
+        </div>
+      </div>
       </scroll-view>
     </up-skeleton>
     <u-action-sheet
@@ -92,12 +86,48 @@
       @close="showActionSheet = false"
       @select="handleActionSelect"
     />
+    <up-popup :show="showQrCode" @close="showQrCode = false" mode="center" :round="10">
+      <div class="qrcode-popup">
+        <div class="qrcode-top">
+          <div class="title">确认码</div>
+          <div class="qrcode-wrapper">
+            <canvas id="qrcode" canvas-id="qrcode" style="width: 400rpx; height: 400rpx"></canvas>
+          </div>
+          <div class="desc">出示此券码给摄影师确认订单</div>
+        </div>
+        <div class="qrcode-bottom">
+          <OrderItemBody :data="currentOrder" />
+        </div>
+      </div>
+    </up-popup>
   </div>
 </template>
 
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
-import { getUserOrder, OrderVO } from '@/api/order';
+import EmptyState from '@/components/common/EmptyState.vue';
+import { getUserOrder, OrderVO, getQrCode } from '@/api/order';
+import OrderItemBody from '@/components/order/OrderItemBody.vue';
+// 引入二维码生成库
+import UQRCode from 'uqrcodejs';
+const handleCopy = (id: string) => {
+  uni.setClipboardData({
+    data: id,
+    success: () => {
+      uni.showToast({
+        title: '复制成功',
+        icon: 'success',
+        duration: 2000
+      })
+    }
+  })
+}
+
+const handleCall = (phone: string) => {
+  uni.makePhoneCall({
+    phoneNumber: phone
+  })
+}
 
 const active = ref(0)
 const orderList: any = ref([])
@@ -129,16 +159,11 @@ const orderStatusMap: Record<number, string> = {
 
 const tabList = ref([
   { name: '全部', path: '/', status: undefined },
-  { name: '待支付', path: '/discover', status: 0 },
-  { name: '待确认', path: '/discover', status: 1 },
-  { name: '待拍摄', path: '/discover', status: 2 },
-  { name: '已拍摄', path: '/discover', status: 3 },
-  { name: '待选图', path: '/my', status: 4 },
-  { name: '修图中', path: '/my', status: 5 },
-  { name: '待交付', path: '/my', status: 6 },
-  { name: '待评价', path: '/my', status: 7 },
-  { name: '已完成', path: '/my', status: 100 },
-  { name: '已关闭', path: '/my', status: [10, 20 ,30] }
+  { name: '待支付', path: '/discover', status: [0] },
+  { name: '待拍摄', path: '/discover', status: [1, 2] },
+  { name: '待交付', path: '/discover', status: [3, 4, 5, 6] },
+  { name: '退款', path: '/my', status: [20, 30] },
+  { name: '待评价', path: '/my', status: [7] }
 ])
 
 const handleClick = (index: number) => {
@@ -201,13 +226,25 @@ const getOrderList = async (params: OrderVO) => {
   try {
     loading.value = true;
     const res = await getUserOrder(params);
+    if (!res || !res.data) {
+      uni.showToast({
+        title: '请先登录',
+        icon: 'none',
+        duration: 2000
+      });
+      return;
+    }
     const list = res.data.list || [];
     if (list.length < pageSize.value) {
       noMore.value = true;
     }
     orderList.value = list;
   } catch (error) {
-    console.error('获取订单列表失败:', error);
+    uni.showToast({
+      title: '获取订单列表失败',
+      icon: 'none',
+      duration: 2000
+    });
   } finally {
     loading.value = false;
   }
@@ -215,6 +252,26 @@ const getOrderList = async (params: OrderVO) => {
 
 onMounted(() => {
   getOrderList({ pageNo: 1, pageSize: 10 });
+})
+
+onPullDownRefresh(async () => {
+  currentPage.value = 1;
+  noMore.value = false;
+  orderList.value = [];
+  const currentTab = tabList.value[active.value];
+  const params: any = {
+    pageNo: 1,
+    pageSize: 10
+  };
+  if (currentTab.status !== undefined) {
+    if (Array.isArray(currentTab.status)) {
+      params.status = currentTab.status;
+    } else {
+      params.status = [currentTab.status];
+    }
+  }
+  await getOrderList(params);
+  uni.stopPullDownRefresh();
 })
 const showActionSheet = ref(false)
 const currentOrder = ref<any>(null)
@@ -224,8 +281,16 @@ const actions = [
   { name: '开具发票' }
 ]
 
-const handleMoreClick = (item: any) => {
+const handleMoreClick = async (item: any) => {
   currentOrder.value = item
+  if (item.orderStatus === 2) {
+    try {
+      const res = await getQrCode(item.id)
+      console.log('订单二维码数据:', res)
+    } catch (error) {
+      console.error('获取订单二维码失败:', error)
+    }
+  }
   showActionSheet.value = true
 }
 
@@ -237,6 +302,31 @@ const handleActionSelect = (item: any) => {
   } else if (item.name === '开具发票') {
     // TODO: 实现开票逻辑
     console.log('开具发票', currentOrder.value)
+  }
+}
+const showQrCode = ref(false)
+const qrCodeData = ref('')
+
+const handleQrCode = async (item: any) => {
+  try {
+    const res = await getQrCode(item.id)
+    // 使用uQRCode生成二维码
+    const qr = new UQRCode()
+    qr.data = res.data
+    qr.size = 200
+    qr.make()
+    const canvasContext = uni.createCanvasContext('qrcode')
+    qr.canvasContext = canvasContext
+    qr.drawCanvas()
+    currentOrder.value = item
+    showQrCode.value = true
+  } catch (error) {
+    console.error('获取订单二维码失败:', error)
+    uni.showToast({
+      title: '获取二维码失败',
+      icon: 'none',
+      duration: 2000
+    })
   }
 }
 </script>
@@ -451,4 +541,76 @@ const handleActionSelect = (item: any) => {
     }
   }
 }
+.qrcode-popup {
+  width: 90vw;
+  .qrcode-top {
+    width: 100%;
+    height: 600rpx;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 32rpx;
+    .title {
+      font-size: 32rpx;
+      font-weight: 500;
+      margin-bottom: 32rpx;
+    }
+    .qrcode-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 400rpx;
+      height: 400rpx;
+      margin: 0 auto;
+      margin-bottom: 24rpx;
+    }
+    .desc {
+      font-size: 28rpx;
+      color: rgba(40, 40, 40, 0.7);
+    }
+  }
+
+  .qrcode-bottom {
+      padding: 32rpx 40rpx;
+      padding-bottom: 0;
+      background: #FAFAFA;
+      position: relative;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 40rpx;
+        right: 40rpx;
+        top: 0;
+        border-top: 2rpx dashed rgba(40, 40, 40, 0.1);
+      }
+      .title {
+        font-size: 32rpx;
+        font-weight: 500;
+        margin-bottom: 16rpx;
+      }
+      .desc {
+        font-size: 28rpx;
+        color: rgba(40, 40, 40, 0.7);
+        margin-bottom: 16rpx;
+      }
+      .tag {
+        display: inline-block;
+        padding: 4rpx 16rpx;
+        background: rgba(186, 38, 54, 0.1);
+        border-radius: 8rpx;
+        font-size: 24rpx;
+        color: #BA2636;
+        margin-bottom: 24rpx;
+      }
+      .price {
+        font-size: 36rpx;
+        font-weight: 500;
+        color: #BA2636;
+      }
+  }
+}
+
+
 </style>

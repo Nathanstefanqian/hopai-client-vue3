@@ -2,34 +2,34 @@
   <div class="h-648rpx w-100vw relative">
     <div class="home">
       <div class="home-location">
-        <area-picker v-model="selectedArea" class="flex items-center">
+        <!-- <area-picker v-model="selectedArea" class="flex items-center">
           <template #default="{ selectedAreaText }">
             <span class="mr-10rpx">{{ selectedAreaText || '南通' }}</span>
             <image :src="netConfig.picURL + '/static/home/location.svg'" class="w-20rpx h-20rpx" />
           </template>
-        </area-picker>
+        </area-picker> -->
       </div>
       <up-swiper :list="list1" indicatorMode="dot" indicator circular height="900rpx" :loading="loading"></up-swiper>
       <div class="home-main">
         <div class="home-main-item" v-for="(category, index) in categories" :key="index">
-          <div class="home-main-item-header">
-            <div class="left">{{ category.name }}</div>
-            <div class="right" @click="handleSku(index)">全部</div>
-          </div>
-          <scroll-view class="home-main-item-scrollview" scroll-x="true">
+            <div class="home-main-item-header">
+              <div class="left">{{ category.name }}</div>
+              <div class="right" @click="handleSku(index)">全部</div>
+            </div>
+        <scroll-view class="home-main-item-scrollview" scroll-x="true">
             <div class="home-main-item-body">
-              <div class="card" v-for="(item, productIndex) in categories[index].children || []" :key="productIndex" @click="handleSpu(item.id)">
-                <div class="card-top">
-                  <image :src="item.picUrl" class="w-280rpx h-400rpx card-top-image" mode="aspectFill" /> 
-                  <div class="tag">{{ item.name }}</div>
-                </div>
-                <div class="card-bottom">
-                  <span class="title">{{ item.name }}</span>
-                  <span class="price">{{ item.priceInfo }}</span>
-                </div>
+            <div class="card" v-for="(item, productIndex) in categories[index].children || []" :key="productIndex" @click="handleSpu(item.id)">
+              <div class="card-top">
+                <image :src="item.picUrl" class="w-280rpx h-400rpx card-top-image" mode="aspectFill" /> 
+                <div class="tag">{{ item.name }}</div>
+              </div>
+              <div class="card-bottom">
+                <span class="title">{{ item.name }}</span>
+                <span class="price">{{ item.priceInfo }}</span>
               </div>
             </div>
-          </scroll-view>
+          </div>
+        </scroll-view>
         </div>
       </div>
     </div>
@@ -40,6 +40,7 @@
 import { netConfig } from '@/config/net.config';
 import { getCarousel, getProductSpuPage, getCategoryTree } from '@/api/home';
 import AreaPicker from '@/components/home/AreaPicker.vue';
+import { useUserStore } from '@/pinia/user';
 
 const loading = ref(true);
 const list1 = ref<string[]>([]);
@@ -73,22 +74,39 @@ const getBanners = async () => {
   }
 }
 
-const getProductsByCategory = async (categoryId: number) => {
-  try {
-    const res = await getProductSpuPage({
-      pageNo: 1,
-      pageSize: 10,
-      categoryId
-    });
-    if (res.data?.list) {
-      categoryProducts.value[categoryId] = res.data.list;
-    }
-  } catch (error) {
-    console.error(`获取分类${categoryId}商品列表失败:`, error);
-  }
-}
 
-onMounted(async () => {
+onLoad(async () => {
+  const userStore = useUserStore();
+  if (!userStore.isLoggedIn) {
+    uni.showModal({
+      title: '温馨提示',
+      content: '登录后可以享受更多功能，是否前往登录？',
+      confirmText: '去登录',
+      cancelText: '继续浏览',
+      success: async (res) => {
+        if (res.confirm) {
+          uni.navigateTo({
+            url: '/pages/auth/index'
+          });
+          return;
+        }
+        // 用户选择继续浏览，加载首页数据
+        loading.value = true;
+        await getBanners();
+        try {
+          const res = await getCategoryTree();
+          if (res.data && res.data.length > 0 && res.data[0].children) {
+            categories.value = res.data;
+          }
+        } catch (error) {
+          console.error('获取分类数据失败:', error);
+        }
+      }
+    });
+    return;
+  }
+  loading.value = true;
+  await new Promise(resolve => setTimeout(resolve, 2000));
   await getBanners();
   try {
     const res = await getCategoryTree();
