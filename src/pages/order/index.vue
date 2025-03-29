@@ -8,9 +8,6 @@
           </div>
         </div>
     </scroll-view>
-    
-
-    <up-skeleton :loading="loading" rows="3">
       <scroll-view 
         class="order-main-scrollview" 
         scroll-y="true"
@@ -18,68 +15,68 @@
       >
       <div class="order-main">
         <div class="order-main-layout">
-          <EmptyState v-if="orderList.length === 0 && !loading" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无订单" />
-          <div class="order-item" v-for="(item,index) in orderList" :key="item.id" v-else>
-            <div class="order-item-top">
-              <div class="order-item-top-header">
-                <div class="header-one">
-                  <span class="mr-16rpx">订单号: {{ item.id }}</span>
-                  <image :src="netConfig.picURL + '/static/order/copy.svg'" class="w-40rpx h-40rpx" @click.stop="handleCopy(item.id)"></image>
+          <up-skeleton :loading="loading" rows="3">
+            <EmptyState v-if="orderList.length === 0 && !loading" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无订单" />
+            <div class="order-item" v-for="(item,index) in orderList" :key="item.id" v-else>
+              <div class="order-item-top">
+                <div class="order-item-top-header">
+                  <div class="header-one">
+                    <span class="mr-16rpx">订单号: {{ item.id }}</span>
+                    <image :src="netConfig.picURL + '/static/order/copy.svg'" class="w-40rpx h-40rpx" @click.stop="handleCopy(item.id)"></image>
+                  </div>
+                  <div class="header-two" style="color: #ba2636;">{{ orderStatusMap[item.orderStatus] }}</div>
                 </div>
-                <div class="header-two" style="color: #ba2636;">{{ orderStatusMap[item.orderStatus] }}</div>
+                <div class="order-item-top-divider"></div>
+                <OrderItemBody v-if="item" :data="item" />
               </div>
-              <div class="order-item-top-divider"></div>
-              <OrderItemBody :data="item" />
-            </div>
-            <div class="order-item-desc">
-              <div class="order-item-desc-one">
-                <div class="order-item-desc-one-item">
-                  <div class="title-item">时间</div>
-                  <div class="data-item">{{ formatDate(item.appointmentStartTime) }} - {{ formatDate(item.appointmentEndTime) }}</div>
-                </div>
-                <div class="order-item-desc-one-item">
-                  <div class="title-item">地点</div>
-                  <div class="data-item">{{ item.location }}</div>
-                </div>
-                <div class="order-item-desc-one-item">
-                  <div class="title-item">摄影师</div>
-                  <div class="data-item">
-                    <span class="mr-20rpx">{{ item.photographerName }}</span>
-                    <span class="mr-20rpx">{{ item.photographerPhone }}</span>
-                    <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
+              <div class="order-item-desc">
+                <div class="order-item-desc-one">
+                  <div class="order-item-desc-one-item">
+                    <div class="title-item">创建时间</div>
+                    <div class="data-item">{{ formatDate(item.createTime) }}</div>
+                  </div>
+                  <div class="order-item-desc-one-item">
+                    <div class="title-item">时间</div>
+                    <div class="data-item">{{ formatDate(item.appointmentStartTime) }} - {{ formatDate(item.appointmentEndTime) }}</div>
+                  </div>
+                  <div class="order-item-desc-one-item">
+                    <div class="title-item">地点</div>
+                    <div class="data-item">{{ item.location }}</div>
+                  </div>
+                  <div class="order-item-desc-one-item">
+                    <div class="title-item">摄影师</div>
+                    <div class="data-item">
+                      <span class="mr-20rpx">{{ item.photographerName }}</span>
+                      <span class="mr-20rpx">{{ item.photographerPhone }}</span>
+                      <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
+                    </div>
+                  </div>
+                  <div class="order-item-desc-one-item">
+                    <div class="title-item">备注</div>
+                    <div class="data-item">
+                      <span>{{ item.remark }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="order-item-desc-one-item">
-                  <div class="title-item">备注</div>
-                  <div class="data-item">
-                    <span>{{ item.remark }}</span>
+                <div class="order-item-desc-two">
+                  <span class="mr-40rpx">实付款</span>
+                  <span>￥ {{ item.actualAmt / 100 || item.orderAmt / 100 }}</span>
+                </div>
+                <div class="order-item-desc-three">
+                  <div class="more" @click="handleMoreClick(item)">更多操作</div>
+                  <div class="right">
+                    <template v-if="handleOrderButton(item).show">
+                      <div :class="handleOrderButton(item).class" @click.stop="handleOrderButton(item).onClick">{{ handleOrderButton(item).text }}</div>
+                    </template>
                   </div>
-                </div>
+                </div>  
               </div>
-              <div class="order-item-desc-two">
-                <span class="mr-40rpx">实付款</span>
-                <span>￥ {{ item.actualAmt / 100 || item.orderAmt / 100 }}</span>
-              </div>
-              <div class="order-item-desc-three">
-                <div class="more" @click="handleMoreClick(item)">更多操作</div>
-                <div class="right">
-                  <div class="comment" v-if="item.orderStatus === 3">立即评价</div>
-                  <div class="download" v-if="item.orderStatus === 3" :class="{ disabled: true }">等待摄影师上传原图</div>
-                  <div class="download" v-if="item.orderStatus === 2" @click.stop="handleQrCode(item)">使用劵码</div>
-                  <div class="download disabled" v-if="item.orderStatus !== 3 && item.orderStatus !== 2">无操作</div>
-                </div>
-              </div>  
             </div>
-          </div>
-        </div>
-        <div class="no-more" v-if="noMore && orderList.length">
-          <div class="line"></div>
-          <span>没有更多了</span>
-          <div class="line"></div>
+            <up-loadmore :status="loadmoreStatus" />
+          </up-skeleton>
         </div>
       </div>
       </scroll-view>
-    </up-skeleton>
     <u-action-sheet
       :show="showActionSheet"
       :actions="actions"
@@ -106,9 +103,10 @@
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
 import EmptyState from '@/components/common/EmptyState.vue';
-import { getUserOrder, OrderVO, getQrCode } from '@/api/order';
+import { getUserOrder, OrderVO, getQrCode, cancelOrder } from '@/api/order';
 import OrderItemBody from '@/components/order/OrderItemBody.vue';
-// 引入二维码生成库
+
+// @ts-ignore 引入二维码生成库
 import UQRCode from 'uqrcodejs';
 const handleCopy = (id: string) => {
   uni.setClipboardData({
@@ -137,8 +135,14 @@ const pageSize = ref(10)
 const noMore = ref(false)
 const isLoadingMore = ref(false)
 
+const loadmoreStatus = computed(() => {
+  if (isLoadingMore.value) return 'loading'
+  if (noMore.value) return 'nomore'
+  return 'more'
+})
+
 const formatDate = (timestamp: number) => {
-  const date = new Date(timestamp);
+  const date = new Date(timestamp)
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
@@ -154,7 +158,8 @@ const orderStatusMap: Record<number, string> = {
   100: '已完成',
   10: '订单已取消',
   20: '退款中',
-  30: '退款成功'
+  30: '退款成功',
+  11: '订单超时'
 };
 
 const tabList = ref([
@@ -162,8 +167,8 @@ const tabList = ref([
   { name: '待支付', path: '/discover', status: [0] },
   { name: '待拍摄', path: '/discover', status: [1, 2] },
   { name: '待交付', path: '/discover', status: [3, 4, 5, 6] },
+  { name: '已完成', path: '/my', status: [100] },
   { name: '退款', path: '/my', status: [20, 30] },
-  { name: '待评价', path: '/my', status: [7] }
 ])
 
 const handleClick = (index: number) => {
@@ -276,36 +281,138 @@ onPullDownRefresh(async () => {
 const showActionSheet = ref(false)
 const currentOrder = ref<any>(null)
 
-const actions = [
-  { name: '申请退款', color: '#ba2636' },
-  { name: '开具发票' }
-]
+const actions = computed(() => {
+  const orderStatus = currentOrder.value?.orderStatus
+  const actionItems = []
+  
+  // 只在待支付状态显示取消订单，或在其他允许退款的状态下显示申请退款
+  if (orderStatus === 0 || orderStatus === 11) {
+    actionItems.push({ name: '取消订单', color: '#ba2636' })
+  } else if (![100, 10, 20, 30].includes(orderStatus)) {
+    actionItems.push({ name: '申请退款', color: '#ba2636' })
+  }
+  
+  actionItems.push({ name: '开具发票' })
+  return actionItems
+})
+
+const handleSelectPhoto = (item: any) => {
+  uni.navigateTo({
+    url: `/packageAlbum/choosePhoto/index?orderId=${item.id}`
+  })
+}
 
 const handleMoreClick = async (item: any) => {
   currentOrder.value = item
-  if (item.orderStatus === 2) {
-    try {
-      const res = await getQrCode(item.id)
-      console.log('订单二维码数据:', res)
-    } catch (error) {
-      console.error('获取订单二维码失败:', error)
-    }
-  }
   showActionSheet.value = true
 }
 
 const handleActionSelect = (item: any) => {
   showActionSheet.value = false
   if (item.name === '申请退款') {
-    // TODO: 实现退款逻辑
-    console.log('申请退款', currentOrder.value)
+    uni.navigateTo({
+      url: `/packageOrder/refund/index?orderId=${currentOrder.value.id}`
+    })
   } else if (item.name === '开具发票') {
     // TODO: 实现开票逻辑
     console.log('开具发票', currentOrder.value)
+  } else if (item.name === '取消订单') {
+    uni.showModal({
+      title: '取消订单',
+      content: '确定要取消该订单吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          let data: any = null
+          try {
+            data = await cancelOrder({
+              id: currentOrder.value.id,
+              cancellationReason: '用户主动取消'
+            })
+            console.log(data)
+            if(data.data) {
+              uni.showToast({
+              title: '取消成功',
+              icon: 'success',
+              duration: 2000
+            })
+            }
+            else {
+              uni.showToast({
+              title: data.msg,
+              icon: 'none',
+              duration: 2000
+            })
+              return
+            }
+            // 刷新订单列表
+            getOrderList({ pageNo: currentPage.value, pageSize: pageSize.value })
+          } catch (error) {
+            uni.showToast({
+              title: data.msg,
+              icon: 'none',
+              duration: 2000
+            })
+          }
+        }
+      }
+    })
   }
+}
+
+const handleTrungPhoto = (item: any) => {
+  uni.navigateTo({
+    url: `/packageAlbum/confirmPhoto/index?orderId=${item.id}`
+  })
 }
 const showQrCode = ref(false)
 const qrCodeData = ref('')
+
+const handleOrderButton = (item: any) => {
+  const buttonConfig = {
+    show: true,
+    text: '',
+    class: '',
+    onClick: () => {}
+  }
+
+  switch (item.orderStatus) {
+    case 0:
+      buttonConfig.text = '去支付'
+      buttonConfig.class = 'download'
+      buttonConfig.onClick = () => uni.navigateTo({ url: `/packageOrder/payment/index?orderId=${item.id}` })
+      break
+    case 7:
+      buttonConfig.text = '立即评价'
+      buttonConfig.class = 'comment'
+      buttonConfig.onClick = () => uni.navigateTo({ url: `/packageOrder/review/index?orderId=${item.id}` })
+      break
+    case 3:
+      buttonConfig.text = '等待摄影师上传原图'
+      buttonConfig.class = 'download disabled'
+      break
+    case 2:
+      buttonConfig.text = '使用劵码'
+      buttonConfig.class = 'download'
+      buttonConfig.onClick = () => handleQrCode(item)
+      break
+    case 4:
+      buttonConfig.text = '去选图'
+      buttonConfig.class = 'download'
+      buttonConfig.onClick = () => handleSelectPhoto(item)
+      break
+    case 6:
+      buttonConfig.text = '查看精修图'
+      buttonConfig.class = 'download'
+      buttonConfig.onClick = () => handleTrungPhoto(item)
+      break
+    default:
+      buttonConfig.text = '无操作'
+      buttonConfig.class = 'download disabled'
+      break
+  }
+
+  return buttonConfig
+}
 
 const handleQrCode = async (item: any) => {
   try {
@@ -313,7 +420,7 @@ const handleQrCode = async (item: any) => {
     // 使用uQRCode生成二维码
     const qr = new UQRCode()
     qr.data = res.data
-    qr.size = 200
+    qr.size = 224
     qr.make()
     const canvasContext = uni.createCanvasContext('qrcode')
     qr.canvasContext = canvasContext
@@ -575,7 +682,6 @@ const handleQrCode = async (item: any) => {
   .qrcode-bottom {
       padding: 32rpx 40rpx;
       padding-bottom: 0;
-      background: #FAFAFA;
       position: relative;
       &::before {
         content: '';

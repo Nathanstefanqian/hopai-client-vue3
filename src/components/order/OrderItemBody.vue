@@ -1,5 +1,5 @@
 <template>
-  <div class="order-item-top-body">
+  <div class="order-item-top-body" v-if="data">
     <div class="title">
       <span class="title-name">{{ data.spuDescribe }}</span>
       <span>￥ {{ data.orderAmt / 100 }}</span>

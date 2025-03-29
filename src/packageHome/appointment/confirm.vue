@@ -9,14 +9,15 @@
           <image :src="orderData.spuInfo?.picUrl || ''" class="left-image" mode="aspectFill" />
           <div class="left-desc">
             <div class="title">{{ orderData.spuInfo?.introduction || '' }}</div>
-            <div class="desc">{{ orderData.spuInfo?.rawCount || 0 }}张底片/{{ orderData.spuInfo?.retouchedImageCount || 0 }}张精修、拍摄{{ orderData.spuInfo?.shootingTime || 0 }}小时</div>
+            <div class="desc">{{ orderData.spuInfo?.rawCount || 0 }}张底片/{{ orderData.spuInfo?.retouchedImageCount || 0 }}张精修</div>
+            <div class="desc">拍摄{{ orderData.spuInfo?.shootingTime || 0 }}小时/{{ orderData.spuInfo?.deliveryTime || 0 }}天交付</div>
             <div class="tag">
               <span class="tag-btn">{{ orderData.spuInfo?.name || '' }}</span>
             </div>
           </div>
         </div>
         <div class="right">
-          <div class="price">￥ {{ orderData.spuInfo.marketPrice / 100 || 0 }}</div>
+          <div class="price">￥ {{ orderData.photographerInfo.price  || 0 }}</div>
         </div>
       </div>
     </div>
@@ -181,6 +182,12 @@ const handlePay = async () => {
                 title: "支付成功",
                 icon: "success",
           })
+          // 支付成功后跳转到订单页面
+          setTimeout(() => {
+            uni.switchTab({
+              url: '/pages/order/index'
+            })
+          }, 1500)
         } else if (result === "fail") {
           uni.showToast({
             title: "支付失败",
@@ -193,22 +200,6 @@ const handlePay = async () => {
           });
         }
     },2000)
-
-
-
-
-
-
-  //   // 临时跳转到成功页面
-  //   uni.navigateTo({
-  //     url: '/packageHome/appointment/success'
-  //   });
-  // } catch (error) {
-  //   uni.showToast({
-  //     title: '创建订单失败',
-  //     icon: 'none'
-  //   });
-  // }
     })
   } catch (error) {
     uni.showToast({
@@ -265,9 +256,8 @@ onMounted(() => {
           }
           .desc {
             font-size: 24rpx;
-            color: rgba(40, 40, 40, 0.50);
-            font-weight: 550;
             margin-bottom: 20rpx;
+            color: rgba(40, 40, 40, 0.50);
           }
           .tag {
             &-btn {

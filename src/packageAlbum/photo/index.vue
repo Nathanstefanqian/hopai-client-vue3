@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { getPhotoPage } from '@/api/home/photo'
+import { getPhotoPage, getOrderOriginPhotos } from '@/api/home/photo'
 // import { useSts } from '@/hooks/useOss'
 
 // 定义页面参数
@@ -31,6 +31,7 @@ const pageSize = ref<number>(20);
 const loading = ref<boolean>(true);
 const finished = ref<boolean>(false);
 const loadMoreStatus = ref<'loading' | 'nomore' | 'more'>('more');
+const orderInfo = ref<any>(null);
 
 // 定义图片列表
 const list = ref<Array<{ picUrl: string; selected: boolean; originalUrl: string }>>([]);
@@ -38,14 +39,35 @@ const isSelected = ref<boolean>(false);
 // let getStsToken: () => Promise<void>;
 // let signatrueUrl: (url: string) => Promise<string>;
 
+// 获取订单原图数据
+const fetchOrderPhotos = async () => {
+  try {
+    loading.value = true;
+    const res = await getOrderOriginPhotos(orderId.value);
+    const processedList = res.data.map((item: any) => ({
+      picUrl: item.picUrl,
+      originalUrl: item.picUrl,
+      selected: false
+    }));
+    list.value = processedList;
+  } catch (error) {
+    uni.showToast({
+      title: '加载失败，请重试',
+      icon: 'none'
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
 // 获取相册照片
 const fetchAlbumPhotos = async () => {
   try {
     loading.value = true;
-    const res = await getPhotoPage({ albumId: id.value, pageNo: pageNo.value, pageSize: pageSize.value });
+    const res = await getPhotoPage(pageNo.value, pageSize.value, id.value);
     const processedList = await Promise.all(
       res.data.list.map(async (item: any) => {
-        const baseUrl = item.picUrl;
+        const baseUrl = item.url;
         return {
           picUrl: baseUrl + '/minipreview',
           originalUrl: baseUrl,
@@ -79,10 +101,11 @@ const fetchAlbumPhotos = async () => {
 
 // 页面加载时获取参数
 onLoad(async (options: any) => {
-  if (options.id) {
+  if (options.id || options.orderId) {
     id.value = options.id;
     orderId.value = options.orderId;
-    await fetchAlbumPhotos();
+    
+      await fetchAlbumPhotos();
   }
 });
 
@@ -112,8 +135,17 @@ const cancelSelected = () => {
 
 const handleSelected = () => {
   if (isSelected.value) {
-    // 如果是选择模式，执行下载
-    downloadSelectedImages();
+    // 如果是选择模式，执行确认选择
+    if (orderInfo.value) {
+      // TODO: 处理订单选图逻辑
+      uni.showToast({
+        title: '选图成功',
+        icon: 'success'
+      });
+    } else {
+      // 普通模式下执行下载
+      downloadSelectedImages();
+    }
   } else {
     // 如果是未选择模式，进入选择模式
     isSelected.value = true;

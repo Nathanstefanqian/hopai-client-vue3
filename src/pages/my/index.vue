@@ -140,6 +140,12 @@ const getData = async () => {
     if (!response?.data) return;
     
     user.value = response.data;
+    
+    // 存储用户昵称到本地
+    uni.setStorage({
+      key: 'nickname',
+      data: user.value.nickname
+    });
 
     // 防止生日为 null
     if (user?.value?.birthday == null) user.value.birthday = dayjs().valueOf();

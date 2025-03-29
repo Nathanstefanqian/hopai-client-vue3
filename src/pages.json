@@ -38,6 +38,23 @@
   ],
   "subPackages": [
     {
+      "root": "packageOrder",
+      "pages": [
+        {
+          "path": "review/index",
+          "style": {
+            "navigationBarTitleText": "评价订单"
+          }
+        },
+        {
+          "path": "refund/index",
+          "style": {
+            "navigationBarTitleText": "申请退款"
+          }
+        }
+      ]
+    },
+    {
       "root": "packageHome",
       "pages": [
         {
@@ -120,6 +137,18 @@
           "path": "photo/index",
           "style": {
             "navigationBarTitleText": "我的相册"
+          }
+        },
+        {
+          "path": "choosePhoto/index",
+          "style": {
+            "navigationBarTitleText": "选择照片"
+          }
+        },
+        {
+          "path": "confirmPhoto/index",
+          "style": {
+            "navigationBarTitleText": "确认照片"
           }
         }
       ]
