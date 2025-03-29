@@ -56,6 +56,12 @@ const confirmPicker = (e: any) => {
   showPicker.value = false
 }
 
+const orderId = ref('')
+
+onLoad((options: any) => {
+  orderId.value = options.orderId
+})
+
 const handleSubmit = async () => {
   if (!formData.value.reason) {
     uni.showToast({
@@ -66,9 +72,8 @@ const handleSubmit = async () => {
   }
 
   try {
-    const orderId = 123
     await submitRefund({
-      id: orderId,
+      id: orderId.value,
       reason: formData.value.reason,
       reasonInfo: formData.value.reasonInfo
     })

@@ -57,7 +57,7 @@ export const createEvaluation = (data: {
 
 // 提交退款申请
 export const submitRefund = (data: {
-  id: number,
+  id: any,
   reason: string,
   reasonInfo?: string
 }) => {
