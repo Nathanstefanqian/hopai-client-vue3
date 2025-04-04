@@ -71,3 +71,54 @@ export const cancelOrder = (data: {
 }) => {
   return request.post('/member/order/cancel', data)
 }
+
+// 获取隐私号
+export const getTmpPhone = (orderId: any) => {
+  return request.get(`/member/order/getTmpPhone?id=${orderId}`)
+}
+
+// 获取用户发票记录
+export const getUserInvoiceList = (data: {
+  pageNo: number
+  pageSize: number
+}) => {
+  return request.post('/member/invoice/user/invoice/list', data)
+}
+
+// 获取发票下的订单信息
+export const getInvoiceOrders = (data: {
+  pageNo: number
+  pageSize: number
+  invoiceId: string | number
+}) => {
+  return request.post('/member/invoice/invoice/order', data)
+}
+
+// 获取用户可开票订单
+export const getUserCanInvoiceOrders = (data: {
+  pageNo: number
+  pageSize: number
+  status?: number[]
+}) => {
+  return request.post('/member/invoice/getUserCanInvoiceOrders', data)
+}
+
+// 创建发票
+export const createInvoice = (data: {
+  orders: {
+    orderId: number
+    itemAmount: number
+  }[]
+  invoiceType: number
+  invoiceTitle: string
+  taxNumber: string
+  invoiceAmount: number
+  email: string
+  address: string
+  mobile: string
+  bankName: string
+  bankAccountNo: string
+  remark: string
+}) => {
+  return request.post('/member/invoice/create', data)
+}

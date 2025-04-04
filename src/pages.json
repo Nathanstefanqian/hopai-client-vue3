@@ -127,6 +127,18 @@
           "style": {
             "navigationBarTitleText": "基础信息"
           }
+        },
+        {
+          "path": "invoice/index",
+          "style": {
+            "navigationBarTitleText": "发票列表"
+          }
+        },
+        {
+          "path": "invoice/create",
+          "style": {
+            "navigationBarTitleText": "开具发票"
+          }
         }
       ]
     },

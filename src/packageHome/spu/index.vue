@@ -1,5 +1,5 @@
 <template>
-  <div class="spu w-100vw">
+  <div class="spu w-100vw" v-if="!loading">
     <up-swiper v-if="spuDetail.sliderPicUrls?.length" class="spu-swiper" :list="spuDetail.sliderPicUrls" indicator circular height="900rpx" @change="(e: any)=> current = e.current">
       <template #indicator>
         <div class="indicator">
@@ -68,18 +68,23 @@
       <div class="spu-footer-btn" @click="handleAppointment">立即预约</div>
     </div>
   </div>
+  <div class="spu spu-flex w-100vw" v-else>
+    <up-loading-icon mode="semicircle" :show="loading"></up-loading-icon>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
 import { getSpuDetail, getProductSpuPage, getDetail } from '@/api/home';
 import { useUserStore } from '@/pinia/user';
+import { getUserOrder } from '@/api/order';
 
 const current = ref(0)
 const currentTab = ref(0)
 const spuDetail = ref<any>({})
 const descriptionUrls = ref([])
 const serviceUrls = ref([])
+const loading = ref(true)
 
 const card = computed(() => [
   { title: `${spuDetail.value.shootingTime}小时拍摄`, url: 'time.svg' },
@@ -91,6 +96,7 @@ const card = computed(() => [
 onLoad(async (options: any) => {
   if (options.id) {
     try {
+      loading.value = true
       const res = await getSpuDetail(Number(options.id))
       spuDetail.value = res.data
 
@@ -99,8 +105,29 @@ onLoad(async (options: any) => {
       // 解析description和service字段中的图片URL
       descriptionUrls.value = JSON.parse(res.data.description || '[]')
       serviceUrls.value = JSON.parse(res.data.service || '[]')
+      loading.value = false
+
+      // 检查是否有待支付订单
+      const orderRes = await getUserOrder({
+        pageNo: 1,
+        pageSize: 10,
+        status: [0]
+      })
+      if (orderRes.data.list && orderRes.data.list.length > 0) {
+        uni.showModal({
+          title: '提示',
+          content: '您有待支付的订单，请先完成处理再继续浏览',
+          // showCancel: false,
+          showCancel: true,
+          success: () => {
+            uni.switchTab({ url: '/pages/order/index' })
+          }
+        })
+        return
+      }
     } catch (error) {
       console.error('获取商品详情失败:', error)
+      loading.value = false
     }
   }
 })
@@ -129,6 +156,12 @@ const handleAppointment = () => {
 .spu {
   min-height: 100vh;
   background-color: #f6f6f6;
+  &-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
   &-swiper {
     z-index: 2;
   }

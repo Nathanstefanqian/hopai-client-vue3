@@ -1,5 +1,5 @@
 <template>
-  <div class="h-648rpx w-100vw relative">
+  <div class="h-648rpx w-100vw relative" v-if="!loading">
     <div class="home">
       <div class="home-location">
         <!-- <area-picker v-model="selectedArea" class="flex items-center">
@@ -34,6 +34,9 @@
       </div>
     </div>
   </div>
+  <div class="home-loading" v-else>
+    <up-loading-icon mode="semicircle" :show="loading"></up-loading-icon>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -62,21 +65,18 @@ const handleSku = (categoryId: number) => {
 
 const getBanners = async () => {
   try {
-    loading.value = true;
     const res = await getCarousel();
     if (res.data) {
       list1.value = res.data.map((item: any) => item.imageUrl);
     }
   } catch (error) {
     console.error('获取轮播图失败:', error);
-  } finally {
-    loading.value = false;
-  }
+  } 
 }
-
 
 onLoad(async () => {
   const userStore = useUserStore();
+  loading.value = true;
   if (!userStore.isLoggedIn) {
     uni.showModal({
       title: '温馨提示',
@@ -90,29 +90,16 @@ onLoad(async () => {
           });
           return;
         }
-        // 用户选择继续浏览，加载首页数据
-        loading.value = true;
-        await getBanners();
-        try {
-          const res = await getCategoryTree();
-          if (res.data && res.data.length > 0 && res.data[0].children) {
-            categories.value = res.data;
-          }
-        } catch (error) {
-          console.error('获取分类数据失败:', error);
-        }
       }
-    });
-    return;
+    })
   }
-  loading.value = true;
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  await getBanners();
   try {
+    await getBanners();
     const res = await getCategoryTree();
     if (res.data && res.data.length > 0 && res.data[0].children) {
       categories.value = res.data;
     }
+    loading.value = false
   } catch (error) {
     console.error('获取分类数据失败:', error);
   }
@@ -122,7 +109,15 @@ onLoad(async () => {
 <style lang="scss" scoped>
 .home {
   position: relative;
-
+  
+  &-loading {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    align-items: center;
+    justify-content: center;
+    background-color: #f6f6f6;
+  }
   &-location {
     position: absolute;
     z-index: 1;

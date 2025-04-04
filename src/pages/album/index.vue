@@ -8,27 +8,29 @@
         </div>
       </div>
     </scroll-view>
-    <up-skeleton :rows="3" :loading="loading">
       <scroll-view class="album-main-scrollview" scroll-y="true" @scrolltolower="handleLoadMore">
         <div class="album-main">
           <!-- 这里必须叠一层 -->
           <div class="album-main-layout"> 
-            <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="当前没有相册" />
-            <div class="album-item" v-else @click="handlePhoto(item)" v-for="item, index in album" :key="item.id">
-              <image :src="item.backgroundUrl" class="album-item-image" mode="aspectFill" />
-              <div class="album-item-title">{{ item.name }}</div>
-              <div class="album-item-desc">
-                <span style="font-size: 36rpx;">{{ item.number || 0 }}</span>
-                <span>{{ new Date(item.createTime).getFullYear() + '.' + (new Date(item.createTime).getMonth() + 1) + '.' + new Date(item.createTime).getDate() }}</span>
+            <up-skeleton :rows="3" :loading="loading">
+              <div class="album-main-layout-flex">
+                <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="当前没有相册" />
+                <div class="album-item" v-else @click="handlePhoto(item)" v-for="item, index in album" :key="item.id">
+                  <image :src="item.backgroundUrl" class="album-item-image" mode="aspectFill" />
+                  <div class="album-item-title">{{ item.name }}</div>
+                  <div class="album-item-desc">
+                    <span style="font-size: 36rpx;">{{ item.number || 0 }}</span>
+                    <span>{{ new Date(item.createTime).getFullYear() + '.' + (new Date(item.createTime).getMonth() + 1) + '.' + new Date(item.createTime).getDate() }}</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </up-skeleton>
           </div>
           <div class="load-more" v-if="hasMore || loading">
             {{ loading ? '加载中...' : hasMore ? '上拉加载更多' : '没有更多了' }}
           </div>
         </div>
       </scroll-view>
-      </up-skeleton>
     </div>
 </template>
 
@@ -140,24 +142,25 @@ onPullDownRefresh(async () => {
   .album-main {
     background-color: #f6f6f6;
     &-layout {
-      display: flex;
       padding: 32rpx;
       box-sizing: border-box;
-      flex-wrap: wrap;
       width: 100%;
-      flex-grow: 1;
-      justify-content: space-between;
-      .album-item {
-      width: 328rpx;
-      height: 564rpx;
-      border-radius: 16rpx;
-      background-color: #fff;
-      margin-bottom: 32rpx;
-      padding: 32rpx;
-      display: flex;
-      flex-direction: column;
-      box-sizing: border-box;
-      
+      &-flex {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        flex-grow: 1;
+        .album-item {
+          width: 328rpx;
+          height: 564rpx;
+          border-radius: 16rpx;
+          background-color: #fff;
+          margin-bottom: 32rpx;
+          padding: 32rpx;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          
       &-image {
         width: 100%;
         border-radius: 16rpx;
@@ -173,6 +176,8 @@ onPullDownRefresh(async () => {
         color: rgba(0, 0, 0, 0.30);
       }
     }
+      }
+
     }
 
   }

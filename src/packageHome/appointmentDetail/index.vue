@@ -9,13 +9,17 @@
       <div class="detail-item-header">拍摄地点</div>
       <div class="detail-item-input" @click="handleChooseLocation">{{ formData.area || '点击选择位置' }}</div>
       <input v-model="formData.address" class="detail-item-input" placeholder="详细地址" disabled />
-      <input v-model="formData.areaCode" class="detail-item-input" placeholder="区域编码" disabled />
+      <textarea
+        v-model="formData.detailAddress"
+        class="detail-item-input detail-item-area h-200rpx"
+        placeholder="请输入补充地址信息（选填）"
+      ></textarea>
     </div>
     <div class="detail-item">
       <div class="detail-item-header">备注</div>
       <textarea
         v-model="formData.remark"
-        class="detail-item-input h-300rpx w-95%"
+        class="detail-item-input h-300rpx detail-item-area"
         placeholder="请输入100个字以内备注信息"
         maxlength="100"
       ></textarea>
@@ -25,6 +29,7 @@
       <div class="btn mr-20rpx" @click="handlePrev">上一步</div>
       <div class="btn btn1" @click="handleNext">下一步</div>
     </div>
+    <div class="detail-footer-blank"></div>
   </div>
 </template>
 
@@ -36,6 +41,7 @@ const formData = reactive({
   phone: '',
   area: '',
   address: '',
+  detailAddress: '',
   remark: '',
   latitude: 0,
   longitude: 0,
@@ -146,6 +152,7 @@ const handleNext = () => {
     phone: formData.phone,
     area: formData.area,
     address: formData.address,
+    detailAddress: formData.detailAddress,
     areaCode: formData.areaCode,
     remark: formData.remark
   });
@@ -160,7 +167,7 @@ const handleNext = () => {
   display: flex;
   flex-direction: column;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   padding: 32rpx;
   box-sizing: border-box;
   
@@ -182,6 +189,9 @@ const handleNext = () => {
         color: rgba(40, 40, 40, 0.30);
       }
     }
+    &-area {
+      width: 92%;
+    }
   }
 
   &-footer {
@@ -189,13 +199,17 @@ const handleNext = () => {
     align-items: center;
     box-sizing: border-box;
     padding: 32rpx 64rpx 64rpx 64rpx;
-    position: absolute;
+    background-color: #fff;
+    position: fixed;
     bottom: 0;
     left: 0;
     height: 180rpx;
     width: 100vw;
     border-top: 1rpx solid rgba(40, 40, 40, 0.10);
-
+    &-blank {
+      width: 100vw;
+      height: 180rpx;
+    }
     .btn {
       width: 300rpx;
       height: 80rpx;

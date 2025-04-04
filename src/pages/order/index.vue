@@ -48,7 +48,7 @@
                     <div class="data-item">
                       <span class="mr-20rpx">{{ item.photographerName }}</span>
                       <span class="mr-20rpx">{{ item.photographerPhone }}</span>
-                      <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
+                      <span class="mr-20rpx contakt" @click="handleCall(item.id)">联系摄影师</span>
                     </div>
                   </div>
                   <div class="order-item-desc-one-item">
@@ -72,7 +72,7 @@
                 </div>  
               </div>
             </div>
-            <up-loadmore :status="loadmoreStatus" />
+            <up-loadmore :status="loadmoreStatus" v-if="orderList.length" />
           </up-skeleton>
         </div>
       </div>
@@ -103,7 +103,7 @@
 <script setup lang="ts">
 import { netConfig } from '@/config/net.config';
 import EmptyState from '@/components/common/EmptyState.vue';
-import { getUserOrder, OrderVO, getQrCode, cancelOrder } from '@/api/order';
+import { getUserOrder, OrderVO, getQrCode, cancelOrder, getTmpPhone } from '@/api/order';
 import OrderItemBody from '@/components/order/OrderItemBody.vue';
 
 // @ts-ignore 引入二维码生成库
@@ -121,10 +121,34 @@ const handleCopy = (id: string) => {
   })
 }
 
-const handleCall = (phone: string) => {
-  uni.makePhoneCall({
-    phoneNumber: phone
-  })
+const handleCall = async (orderId: string) => {
+  try {
+    const response = await getTmpPhone(orderId)
+    const phone = response?.data
+    
+    if (!phone) {
+      uni.showToast({
+        title: '获取手机号失败，请联系客服',
+        icon: 'none'
+      })
+      return
+    }
+
+    uni.makePhoneCall({
+      phoneNumber: phone,
+      fail: () => {
+        uni.showToast({
+          title: '拨打电话失败',
+          icon: 'none'
+        })
+      }
+    })
+  } catch (error) {
+    uni.showToast({
+      title: '获取手机号失败，请联系客服',
+      icon: 'none'
+    })
+  }
 }
 
 const active = ref(0)
@@ -345,7 +369,7 @@ const handleActionSelect = (item: any) => {
               return
             }
             // 刷新订单列表
-            getOrderList({ pageNo: currentPage.value, pageSize: pageSize.value })
+            getOrderList({ pageNo: currentPage.value, pageSize: pageSize.value, status: tabList.value[active.value].status  })
           } catch (error) {
             uni.showToast({
               title: data.msg,
@@ -379,7 +403,7 @@ const handleOrderButton = (item: any) => {
     case 0:
       buttonConfig.text = '去支付'
       buttonConfig.class = 'download'
-      buttonConfig.onClick = () => uni.navigateTo({ url: `/packageOrder/payment/index?orderId=${item.id}` })
+      buttonConfig.onClick = () => uni.navigateTo({ url: `/packageHome/appointment/confirm?orderId=${item.id}` })
       break
     case 7:
       buttonConfig.text = '立即评价'
@@ -420,7 +444,7 @@ const handleQrCode = async (item: any) => {
     // 使用uQRCode生成二维码
     const qr = new UQRCode()
     qr.data = res.data
-    qr.size = 224
+    qr.size = 200
     qr.make()
     const canvasContext = uni.createCanvasContext('qrcode')
     qr.canvasContext = canvasContext

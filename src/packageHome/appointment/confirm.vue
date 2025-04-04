@@ -38,7 +38,7 @@
          </div>
          <div class="card2-main-item">
           <div class="left">地点</div>
-          <div class="right">{{ orderData.contactInfo.area }} {{ orderData.contactInfo.address }}</div>
+          <div class="right">{{ orderData.contactInfo.address }} {{ orderData.contactInfo.area }} {{ orderData.contactInfo.detailAddress }}</div>
          </div>
          <div class="card2-main-item">
           <div class="left">摄影师</div>
@@ -125,18 +125,15 @@ const loadOrderData = () => {
 };
 
 const userStore = useUserStore();
+const loading = ref(false);
 const handlePay = async () => {
+  if (loading.value) return;
+  loading.value = true;
+  uni.showLoading({
+    title: '提交中...'
+  });
   const userInfo = userStore.userInfo;
-  if (!userInfo) {
-    uni.showToast({
-      title: '请先登录',
-      icon: 'none'
-    });
-    return;
-  }
   try {
-    // 这里添加创建订单的API调用
-    // 预留一个字段，用来存储具体的定位信息
     const orderParams = {
       spuId: orderData.value.spuInfo?.id,
       photographerId: orderData.value.photographerId,
@@ -144,64 +141,93 @@ const handlePay = async () => {
       appointmentEndTime: orderData.value.appointmentEnd,
       memberName: orderData.value.contactInfo.name,
       memberPhone: orderData.value.contactInfo.phone,
-      location: orderData.value.contactInfo.address + orderData.value.contactInfo.area,
+      location: orderData.value.contactInfo.address + '' + orderData.value.contactInfo.area + orderData.value.contactInfo.detailAddress,
       orderAmt: orderData.value.totalAmount / 100,
       remark: orderData.value.contactInfo.remark
     };
-    console.log('orderParams', orderParams);
     const data: any = await createUserOrders(orderParams)
-    console.log('提交订单', data)
     if(!data.data) {
+      uni.hideLoading();
+      loading.value = false;
       uni.showToast({
         title: data.msg,
         icon: "none",
       });
-      return
+      return;
     }
     uni.showToast({
       title: '创建订单成功',
       icon: "success"
-    })
+    });
     const payParams = {
       id: data.data,
       channelCode: 'yeepay_wx_lite_ofl',
-      openId: userInfo.openid
+      openId: userInfo?.openid
+    };
+    const payData: any = await submitPayOrders(payParams);
+    if(!payData.data) {
+      uni.hideLoading();
+      loading.value = false;
+      uni.showToast({
+        title: payData.msg,
+        icon: "error",
+      });
+      return;
     }
-    setTimeout(async () => {
-      const payData: any = await submitPayOrders(payParams)
-      if(!payData.data) {
+    pingpp.createPayment(payData.data.charges.data[0], (result: any, err: any) => {
+      loading.value = false;
+      uni.hideLoading();
+      if (result == "success") {
+        uni.requestSubscribeMessage({
+          tmplIds: ['evy0s2lxmliGPJj0bmlk2E9AGKD96HD0kNpKfGA4bp8'],
+          success: (res) => {
+            uni.showToast({
+              title: "支付成功",
+              icon: "success",
+            });
+            setTimeout(() => {
+              uni.switchTab({
+                url: '/pages/order/index'
+              });
+            }, 1500);
+          },
+          fail: () => {
+            uni.showToast({
+              title: "支付成功",
+              icon: "success",
+            });
+            setTimeout(() => {
+              uni.switchTab({
+                url: '/pages/order/index'
+              });
+            }, 1500);
+          }
+        });
+      } else if (result === "fail") {
         uni.showToast({
-            title: payData.msg,
-            icon: "error",
+          title: "支付失败",
+          icon: "error",
+        });
+        setTimeout(() => {
+          uni.switchTab({
+            url: '/pages/order/index'
           });
-          return;
+        }, 1500);
+      } else if (result === "cancel") {
+        uni.showToast({
+          title: "支付取消",
+          icon: "error",
+        });
+        setTimeout(() => {
+          uni.switchTab({
+            url: '/pages/order/index'
+          });
+        }, 1500);
       }
-      pingpp.createPayment(payData.data.charges.data[0], (result: any, err: any) => {
-        if (result == "success") {
-          uni.showToast({
-                title: "支付成功",
-                icon: "success",
-          })
-          // 支付成功后跳转到订单页面
-          setTimeout(() => {
-            uni.switchTab({
-              url: '/pages/order/index'
-            })
-          }, 1500)
-        } else if (result === "fail") {
-          uni.showToast({
-            title: "支付失败",
-            icon: "error",
-          });
-        } else if (result === "cancel") {
-          uni.showToast({
-            title: "支付取消",
-            icon: "error",
-          });
-        }
-    },2000)
-    })
+    });
   } catch (error) {
+    loading.value = false;
+    uni.hideLoading();
     uni.showToast({
       title: '创建订单失败',
       icon: 'none'

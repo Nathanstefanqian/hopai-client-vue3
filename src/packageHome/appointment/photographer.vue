@@ -346,7 +346,6 @@ const handleDetail = (userId: string) => {
             border: 1rpx solid rgba(0,0,0,0.55);
           }
         }
-
       }
     }
   }

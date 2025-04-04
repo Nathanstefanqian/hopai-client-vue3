@@ -25,7 +25,7 @@
       </div>
       <div class="my-main-menu">
         <div class="my-main-menu-tab">
-          <div v-for="(item, index) in tabItems" :key="index" class="tab">
+          <div v-for="(item, index) in tabItems" :key="index" class="tab" @click="item.onClick?.()">
             <div class="tab-icon">
               <image :src="netConfig.picURL + item.icon" class="w-64rpx h-64rpx" />
             </div>
@@ -163,7 +163,13 @@ const tabItems = [
   { icon: '/static/my/mail.svg', text: '意见反馈' },
   { icon: '/static/my/proxy.svg', text: '服务建议' },
   { icon: '/static/my/chat.svg', text: '在线客服' },
-  { icon: '/static/my/paper.svg', text: '开具发票' },
+  { icon: '/static/my/paper.svg', text: '开具发票', onClick: () => {
+    if (!isLoggedIn) {
+      uni.navigateTo({ url: '/pages/auth/index' });
+      return;
+    }
+    uni.navigateTo({ url: '/packageMy/invoice/index' });
+  }},
 ];
 
 onMounted(async () => {

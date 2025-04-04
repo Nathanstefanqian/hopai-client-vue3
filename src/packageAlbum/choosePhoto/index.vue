@@ -8,6 +8,7 @@
             <up-checkbox usedAlone v-model:checked="item.selected" v-if="isSelected" shape="circle" activeColor="#ba2636" />
           </div>
         </div>
+        <div class="photo-tip">如果精修图不满意，请联系摄影师重新上传</div>
       </div>
     </up-skeleton>
     <!-- <up-loadmore :status="loadMoreStatus" /> -->
@@ -170,6 +171,13 @@ const handleSelected = () => {
         top: 0;
         right: 0;
       }
+    }
+    &-tip {
+      width: 100%;
+      text-align: center;
+      font-size: 24rpx;
+      color: #999;
+      margin-top: 20rpx;
     }
   }
 

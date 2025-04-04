@@ -50,7 +50,6 @@
                     <div class="title">{{ item.title }}</div>
                     <div class="op">
                       <span class="number">{{ item.photoNum }}</span>
-                      <span class="edit">编辑</span>
                     </div>
                   </div>
                   </div>
