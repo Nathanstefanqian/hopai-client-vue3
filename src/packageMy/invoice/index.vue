@@ -171,7 +171,7 @@ const loadInvoiceRecords = async () => {
         title: item.invoiceTitle,
         desc: `税号：${item.taxNumber}`,
         invoiceType: item.invoiceType,
-        status: '已开票'
+        status: item.invoiceStatus === 0 ? '开票中' : '已开票'
       }));
     }
   } catch (error) {
