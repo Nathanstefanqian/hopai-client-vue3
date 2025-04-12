@@ -20,6 +20,14 @@
       }
     },
     {
+      "path": "pages/contact/detail/index",
+      "style": {
+        "navigationBarTitleText": "问题详情",
+        "navigationBarBackgroundColor": "#ba2636",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/album/index",
       "style": {
         "navigationBarTitleText": "相册",

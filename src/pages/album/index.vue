@@ -44,9 +44,9 @@ const pageNo = ref(1)
 const hasMore = ref(true)
 const tabList = ref([
   { name: '全部', path: '/', categoryId: null },
-  { name: '幸福拍', path: '/discover', categoryId: 7 },
+  { name: '幸福拍', path: '/discover', categoryId: 12 },
   { name: '家庭拍', path: '/my', categoryId: 13 },
-  { name: '公司拍', path: '/my', categoryId: 50 },
+  { name: '海外拍', path: '/my', categoryId: 50 },
   { name: '随心拍', path: '/my', categoryId: 1 }
 ])
 const active = ref(0);
