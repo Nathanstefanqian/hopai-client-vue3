@@ -246,7 +246,7 @@ const handleDetail = (userId: string) => {
       width: 200rpx;
       height: 80rpx;
       border-radius: 12rpx;
-      border: 1rpx solid rgba(40, 40, 40, 0.50);
+      border: 2rpx solid rgba(40, 40, 40, 0.50);
       font-size: 28rpx;
       transition: all 0.3s ease;
       cursor: pointer;
@@ -343,7 +343,7 @@ const handleDetail = (userId: string) => {
             padding: 8rpx 32rpx;
             border-radius: 12rpx;
             font-size: 28rpx;
-            border: 1rpx solid rgba(0,0,0,0.55);
+            border: 2rpx solid rgba(0,0,0,0.55);
           }
         }
       }
@@ -368,7 +368,7 @@ const handleDetail = (userId: string) => {
       align-items: center;
       justify-content: center;
       border-radius: 12rpx;
-      border: 1rpx solid #282828;
+      border: 2rpx solid #282828;
     }
     .btn {
       color: #fff;

@@ -181,7 +181,7 @@ const handleNext = () => {
       padding: 26rpx;
       font-size: 28rpx;
       color: #282828;
-      border: 1rpx solid rgba(0, 0, 0, 0.10);
+      border: 2rpx solid rgba(0, 0, 0, 0.10);
       border-radius: 12rpx;
       margin-top: 24rpx;
       background-color: #fff;
@@ -217,7 +217,7 @@ const handleNext = () => {
       align-items: center;
       justify-content: center;
       border-radius: 12rpx;
-      border: 1rpx solid #282828;
+      border: 2rpx solid #282828;
     }
 
     .btn1 {

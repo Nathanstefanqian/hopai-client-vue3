@@ -480,7 +480,7 @@ const confirmDate = () => {
       align-items: center;
       justify-content: center;
     border-radius: 12rpx;
-    border: 1rpx solid #282828;
+    border: 2rpx solid #282828;
     }
 
     .btn1 {

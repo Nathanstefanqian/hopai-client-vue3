@@ -141,7 +141,7 @@ const handlePay = async () => {
       appointmentEndTime: orderData.value.appointmentEnd,
       memberName: orderData.value.contactInfo.name,
       memberPhone: orderData.value.contactInfo.phone,
-      location: orderData.value.contactInfo.address + '' + orderData.value.contactInfo.area + orderData.value.contactInfo.detailAddress,
+      location: orderData.value.contactInfo.address + ' ' + orderData.value.contactInfo.area + ' ' + orderData.value.contactInfo.detailAddress,
       orderAmt: orderData.value.totalAmount / 100,
       remark: orderData.value.contactInfo.remark
     };

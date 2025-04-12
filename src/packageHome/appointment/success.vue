@@ -52,7 +52,7 @@ import { netConfig } from '@/config/net.config';
     width: 260rpx;
     box-sizing: border-box;
     padding: 18rpx 32rpx;
-    border: 1rpx solid #000;
+    border: 2rpx solid #000;
     border-radius: 12rpx;
 
   }

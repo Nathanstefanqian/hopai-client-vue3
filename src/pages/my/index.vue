@@ -25,11 +25,19 @@
       </div>
       <div class="my-main-menu">
         <div class="my-main-menu-tab">
-          <div v-for="(item, index) in tabItems" :key="index" class="tab" @click="item.onClick?.()">
+          <div v-for="(item, index) in tabItems" :key="index" class="tab">
+            <button v-if="item.text === '意见反馈'" open-type="feedback" class="tab-button">
+              <div class="tab-icon">
+                <image :src="netConfig.picURL + item.icon" class="w-64rpx h-64rpx" />
+              </div>
+              <span style="font-size: 28rpx;">{{ item.text }}</span>
+            </button>
+            <div v-else @click="item.onClick?.()" class="tab-button">
             <div class="tab-icon">
               <image :src="netConfig.picURL + item.icon" class="w-64rpx h-64rpx" />
             </div>
             <span style="font-size: 28rpx;">{{ item.text }}</span>
+          </div>
           </div>
         </div>
         <div class="my-main-menu-logout" @click="handleLogin">
@@ -160,9 +168,16 @@ const getData = async () => {
 };
 
 const tabItems = [
-  { icon: '/static/my/mail.svg', text: '意见反馈' },
-  { icon: '/static/my/proxy.svg', text: '服务建议' },
-  { icon: '/static/my/chat.svg', text: '在线客服' },
+  { icon: '/static/my/mail.svg', text: '意见反馈', onClick: () => {
+  }},
+  { icon: '/static/my/proxy.svg', text: '服务协议', onClick: () => {
+    uni.navigateTo({
+      url: `/components/webview/index?url=https://mp.weixin.qq.com/s/xtWxpJXcm25yieQo5A4zfQ`
+    })
+  }},
+  { icon: '/static/my/chat.svg', text: '在线客服', onClick: () => {
+    uni.navigateTo({ url: '/pages/contact/index' });
+  }},
   { icon: '/static/my/paper.svg', text: '开具发票', onClick: () => {
     if (!isLoggedIn) {
       uni.navigateTo({ url: '/pages/auth/index' });
@@ -290,13 +305,29 @@ const handleImageError = () => {
         border-radius: 32rpx;
         display: flex;
         padding: 40rpx;
-        color: rgba(40, 40, 40, 0.85);
         .tab {
           width: 25%;
           display: flex;
           align-items: center;
           flex-direction: column;
           justify-content: center;
+
+          .tab-button {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            padding: 0;
+            line-height: normal;
+            color: rgba(40, 40, 40, 0.85) !important;
+            &::after {
+              border: none;
+            }
+          }
         }
       }
 

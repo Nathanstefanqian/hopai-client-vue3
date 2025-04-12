@@ -147,7 +147,7 @@ const handleSubmit = async () => {
       padding: 20rpx;
       font-size: 28rpx;
       color: #282828;
-      border: 1rpx solid rgba(0, 0, 0, 0.10);
+      border: 2rpx solid rgba(0, 0, 0, 0.10);
       border-radius: 12rpx;
       box-sizing: border-box;
 

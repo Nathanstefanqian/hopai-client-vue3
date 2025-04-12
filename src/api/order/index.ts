@@ -113,12 +113,12 @@ export const createInvoice = (data: {
   invoiceTitle: string
   taxNumber: string
   invoiceAmount: number
-  email: string
-  address: string
-  mobile: string
-  bankName: string
-  bankAccountNo: string
-  remark: string
+  email?: string
+  address?: string
+  mobile?: string
+  bankName?: string
+  bankAccountNo?: string
+  remark?: string
 }) => {
   return request.post('/member/invoice/create', data)
 }

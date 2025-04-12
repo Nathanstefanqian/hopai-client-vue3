@@ -21,14 +21,15 @@
                     <div class="order-number">订单号：{{ item.orderNumber }}</div>
                     <div class="order-time">{{ item.orderTime }}</div>
                   </div>
-                  <div class="order-price">¥{{ item.price }}</div>
+                  <div class="order-price" style="color: #ba2636;">¥{{ item.price }}</div>
                 </div>
                 <div class="order-item-body">
                     <div class="service-info">
                       <div class="service-name">{{ item.serviceName }}</div>
-                      <div class="service-desc">{{ item.serviceDesc }}</div>
+                      <div class="service-time" data-label="预约时间：">{{ formatTime(item.appointmentStartTime) }} - {{ formatTime(item.appointmentEndTime) }}</div>
+                      <div class="service-location" data-label="预约地点：">{{ item.location }}</div>
+                      <div class="service-photographer" data-label="摄影师：">{{ item.photographerName }} {{ item.photographerPhone }}</div>
                     </div>
-                    <div class="service-tag">{{ item.serviceTag }}</div>
                 </div>
           </div>
         </div>
@@ -40,15 +41,16 @@
             <div v-for="item in recordList" :key="item.id" class="order-item">
               <div class="order-item-header">
                 <div class="order-info">
-                  <div class="order-number">发票号：{{ item.invoiceNumber }}</div>
+                  <div class="order-number">发票号：{{ item.invoiceId }}</div>
                   <div class="order-time">{{ item.invoiceTime }}</div>
                 </div>
-                <div class="order-price">¥{{ item.price }}</div>
+                <div class="order-price" style="color: #ba2636;">¥{{ item.price }}</div>
               </div>
               <div class="order-item-body">
                 <div class="service-info">
                   <div class="service-name">{{ item.title }}</div>
                   <div class="service-desc">{{ item.desc }}</div>
+                  <div class="service-desc">开票类型: {{ item.invoiceType ? '个人开票' : '企业开票' }}</div>
                 </div>
                 <div class="service-tag">{{ item.status }}</div>
               </div>
@@ -59,16 +61,12 @@
     </swiper>
     <div class="invoice-footer">
       <div class="invoice-footer-box1" >
-        共<span style="color: #ba2636;">399.00</span>元
+        共<span style="color: #ba2636;">¥{{ selectedPrice }}</span>元
       </div>
       <div class="invoice-footer-box2">
         <div class="checkbox">
           <up-checkbox usedAlone shape="circle" v-model:checked="aloneChecked" class="mr-10rpx" activeColor="#ba2636" @change="handleAllCheck" />
           <span class="mr-10rpx">全选</span>
-          <div>
-            <span>已选中</span>
-            <span style="color: #ba2636;">{{ ' ' + selectedPrice + ' ' }}</span>元
-          </div>
         </div>
         <div class="btn" @click="handleNext">下一步</div>
       </div>
@@ -78,10 +76,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { getUserCanInvoiceOrders } from '@/api/order'
+import { getUserCanInvoiceOrders, getUserInvoiceList } from '@/api/order'
 
-const tabList = [
+interface TabItem {
+  name: string;
+}
+
+interface OrderItem {
+  id: string | number;
+  orderNumber: string | number;
+  orderTime: string;
+  actualAmt: number;
+  serviceName: string;
+  serviceDesc: string;
+  serviceTag: string;
+  checked: boolean;
+}
+
+interface InvoiceRecord {
+  id: number;
+  invoiceId: string;
+  invoiceTime: string;
+  price: number;
+  title: string;
+  desc: string;
+  status: string;
+  invoiceType: string;
+}
+
+const tabList: TabItem[] = [
   { name: '开票订单' },
   { name: '开票记录' }
 ]
@@ -91,294 +114,152 @@ const aloneChecked = ref(false)
 const pageNo = ref(1)
 const pageSize = ref(20)
 
+const formatTime = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}.${month}.${day} ${hours}:${minutes}:${seconds}`;
+};
+
+const orderList = ref<OrderItem[] | any[]>([]);
+
 const loadOrders = async () => {
   try {
     const res = await getUserCanInvoiceOrders({
       pageNo: pageNo.value,
       pageSize: pageSize.value,
-      status: [2]
-    })
-    console.log('打印记录', res)
-    if (res.data?.records) {
-      orderList.value = res.data.records.map((item: any) => ({
-        ...item,
+      status: [1] // 添加状态参数，获取可开票订单
+    });
+    if (res.data) {
+      orderList.value = res.data.list.map((item: any) => ({
+        id: item.id,
+        orderNumber: item.id,
+        orderTime: formatTime(item.createTime),
+        price: (item.orderAmt / 100).toFixed(2),
+        serviceName: item.spuDescribe,
+        appointmentStartTime: item.appointmentStartTime,
+        appointmentEndTime: item.appointmentEndTime,
+        location: item.location,
+        photographerName: item.photographerName,
+        photographerPhone: item.photographerPhone,
         checked: false
-      }))
+      }));
     }
   } catch (error) {
-    console.error('获取订单列表失败：', error)
+    console.error('获取订单列表失败：', error);
   }
-}
+};
+
+const recordList = ref<InvoiceRecord[]>([]);
+
+const loadInvoiceRecords = async () => {
+  try {
+    const res = await getUserInvoiceList({
+      pageNo: pageNo.value,
+      pageSize: pageSize.value
+    });
+    if (res.data) {
+      recordList.value = res.data.list.map((item: any) => ({
+        id: item.id,
+        invoiceId: item.invoiceId,
+        invoiceTime: formatTime(item.createTime),
+        price: (item.invoiceAmount / 100).toFixed(2),
+        title: item.invoiceTitle,
+        desc: `税号：${item.taxNumber}`,
+        invoiceType: item.invoiceType,
+        status: '已开票'
+      }));
+    }
+  } catch (error) {
+    console.error('获取发票记录失败：', error);
+  }
+};
 
 onMounted(() => {
-  loadOrders()
-})
-// const handleTabChange = (index: number) => {
-//    console.log(index)
-//   activeTab.value = index
-// }
+  loadOrders();
+  loadInvoiceRecords();
+});
 
-const handleSwiperChange = (e: any) => {
-  console.log(e)
-  activeTab.value = e.detail.current
+interface SwiperChangeEvent {
+  detail: {
+    current: number;
+  };
 }
 
-// 模拟订单数据
-const orderList = ref([
-  {
-    id: 1,
-    orderNumber: '1521121a7198212',
-    orderTime: '2023.12.27 9:00:28',
-    price: 399.00,
-    serviceName: '提供服务赠送精修（标题）',
-    serviceDesc: '2组/12精修，拍摄2小时',
-    serviceTag: '活动会议',
-    checked: false
-  },
-  {
-    id: 2,
-    orderNumber: '1521121b7198213',
-    orderTime: '2023.12.27 10:15:33',
-    price: 599.00,
-    serviceName: '婚纱照拍摄套餐',
-    serviceDesc: '4组造型，8小时拍摄，30张精修',
-    serviceTag: '婚纱摄影',
-    checked: false
-  },
-  {
-    id: 3,
-    orderNumber: '1521121c7198214',
-    orderTime: '2023.12.27 11:30:45',
-    price: 299.00,
-    serviceName: '证件照拍摄',
-    serviceDesc: '2寸/1寸各4张，现场打印',
-    serviceTag: '证件照',
-    checked: false
-  },
-  {
-    id: 4,
-    orderNumber: '1521121d7198215',
-    orderTime: '2023.12.27 13:45:12',
-    price: 899.00,
-    serviceName: '全家福拍摄套餐',
-    serviceDesc: '3组造型，4小时拍摄，20张精修',
-    serviceTag: '全家福',
-    checked: false
-  },
-  {
-    id: 5,
-    orderNumber: '1521121e7198216',
-    orderTime: '2023.12.27 15:20:08',
-    price: 499.00,
-    serviceName: '儿童写真套餐',
-    serviceDesc: '2组造型，2小时拍摄，15张精修',
-    serviceTag: '儿童摄影',
-    checked: false
-  },
-  {
-    id: 6,
-    orderNumber: '1521121f7198217',
-    orderTime: '2023.12.27 16:40:55',
-    price: 699.00,
-    serviceName: '商业产品拍摄',
-    serviceDesc: '10件产品拍摄，含精修',
-    serviceTag: '商业摄影',
-    checked: false
-  },
-  {
-    id: 7,
-    orderNumber: '1521121g7198218',
-    orderTime: '2023.12.27 17:55:23',
-    price: 799.00,
-    serviceName: '毕业照团体拍摄',
-    serviceDesc: '班级合影+个人照，3小时拍摄',
-    serviceTag: '毕业照',
-    checked: false
-  },
-  {
-    id: 8,
-    orderNumber: '1521121h7198219',
-    orderTime: '2023.12.28 9:15:42',
-    price: 349.00,
-    serviceName: '宠物写真套餐',
-    serviceDesc: '1小时拍摄，10张精修',
-    serviceTag: '宠物摄影',
-    checked: false
-  },
-  {
-    id: 9,
-    orderNumber: '1521121i7198220',
-    orderTime: '2023.12.28 10:30:18',
-    price: 999.00,
-    serviceName: '企业形象拍摄',
-    serviceDesc: '团队照+环境照，半天拍摄',
-    serviceTag: '企业摄影',
-    checked: false
-  },
-  {
-    id: 10,
-    orderNumber: '1521121j7198221',
-    orderTime: '2023.12.28 11:45:36',
-    price: 459.00,
-    serviceName: '艺术写真套餐',
-    serviceDesc: '2组造型，3小时拍摄，15张精修',
-    serviceTag: '艺术写真',
-    checked: false
-  },
-  {
-    id: 11,
-    orderNumber: '1521121k7198222',
-    orderTime: '2023.12.28 13:20:47',
-    price: 599.00,
-    serviceName: '孕妇写真套餐',
-    serviceDesc: '3组造型，3小时拍摄，20张精修',
-    serviceTag: '孕妇照',
-    checked: false
-  },
-  {
-    id: 12,
-    orderNumber: '1521121l7198223',
-    orderTime: '2023.12.28 14:40:15',
-    price: 299.00,
-    serviceName: '形象照拍摄',
-    serviceDesc: '1组造型，1小时拍摄，5张精修',
-    serviceTag: '形象照',
-    checked: false
-  },
-  {
-    id: 13,
-    orderNumber: '1521121m7198224',
-    orderTime: '2023.12.28 15:55:33',
-    price: 899.00,
-    serviceName: '婚礼跟拍服务',
-    serviceDesc: '全天跟拍，100张精修',
-    serviceTag: '婚礼摄影',
-    checked: false
-  },
-  {
-    id: 14,
-    orderNumber: '1521121n7198225',
-    orderTime: '2023.12.28 17:10:22',
-    price: 499.00,
-    serviceName: '闺蜜写真套餐',
-    serviceDesc: '2人拍摄，3组造型，15张精修',
-    serviceTag: '闺蜜照',
-    checked: false
-  },
-  {
-    id: 15,
-    orderNumber: '1521121o7198226',
-    orderTime: '2023.12.29 9:25:44',
-    price: 699.00,
-    serviceName: '情侣写真套餐',
-    serviceDesc: '2人拍摄，4组造型，20张精修',
-    serviceTag: '情侣照',
-    checked: false
-  },
-  {
-    id: 16,
-    orderNumber: '1521121p7198227',
-    orderTime: '2023.12.29 10:40:12',
-    price: 399.00,
-    serviceName: '个人形象写真',
-    serviceDesc: '2组造型，2小时拍摄，10张精修',
-    serviceTag: '个人写真',
-    checked: false
-  },
-  {
-    id: 17,
-    orderNumber: '1521121q7198228',
-    orderTime: '2023.12.29 11:55:29',
-    price: 799.00,
-    serviceName: '旅拍套餐',
-    serviceDesc: '外景拍摄，4小时，25张精修',
-    serviceTag: '旅拍',
-    checked: false
-  },
-  {
-    id: 18,
-    orderNumber: '1521121r7198229',
-    orderTime: '2023.12.29 13:15:37',
-    price: 599.00,
-    serviceName: '亲子写真套餐',
-    serviceDesc: '3口之家，3组造型，15张精修',
-    serviceTag: '亲子照',
-    checked: false
-  },
-  {
-    id: 19,
-    orderNumber: '1521121s7198230',
-    orderTime: '2023.12.29 14:30:55',
-    price: 459.00,
-    serviceName: '宝宝百天照',
-    serviceDesc: '2组造型，2小时拍摄，12张精修',
-    serviceTag: '百天照',
-    checked: false
-  },
-  {
-    id: 20,
-    orderNumber: '1521121t7198231',
-    orderTime: '2023.12.29 15:45:18',
-    price: 899.00,
-    serviceName: '私人定制写真',
-    serviceDesc: '5组造型，6小时拍摄，30张精修',
-    serviceTag: '定制写真',
-    checked: false
-  }
-])
+const handleSwiperChange = (e: SwiperChangeEvent) => {
+  activeTab.value = e.detail.current;
+};
 
 const selectedPrice = computed(() => {
   return orderList.value
     .filter(item => item.checked)
-    .reduce((total, item) => total + item.price, 0)
+    .reduce((total, item) => total + parseFloat(item.price), 0)
+    .toFixed(2)
 })
 
 const handleAllCheck = () => {
   orderList.value.forEach(item => item.checked = !aloneChecked.value)
 }
 
-
-
 const handleNext = () => {
+  const selectedOrders = orderList.value
+    .filter(item => item.checked)
+    .map(item => ({
+      orderId: item.orderNumber,
+      itemAmount: parseFloat(item.price)
+    }));
+
+  if (selectedOrders.length === 0) {
+    uni.showToast({
+      title: '请选择需要开票的订单',
+      icon: 'none'
+    });
+    return;
+  }
+
   uni.navigateTo({
-    url: '/packageMy/invoice/create'
-  })
+    url: `/packageMy/invoice/create?orders=${encodeURIComponent(JSON.stringify(selectedOrders))}&invoiceAmount=${selectedPrice.value}`
+  });
 }
 
-const handleOrderItemClick = (item: any) => {
+const handleOrderItemClick = (item: OrderItem) => {
   item.checked = !item.checked;
 }
 
 // 模拟开票记录数据
-const recordList = ref([
-  {
-    id: 1,
-    invoiceNumber: 'FP202312270001',
-    invoiceTime: '2023.12.27 9:30:28',
-    price: 399.00,
-    title: '摄影服务费',
-    desc: '包含2组服务项目',
-    status: '已开票'
-  },
-  {
-    id: 2,
-    invoiceNumber: 'FP202312280002',
-    invoiceTime: '2023.12.28 14:20:33',
-    price: 899.00,
-    title: '婚纱摄影套餐',
-    desc: '含化妆、拍摄、精修服务',
-    status: '已开票'
-  },
-  {
-    id: 3,
-    invoiceNumber: 'FP202312290003',
-    invoiceTime: '2023.12.29 16:45:12',
-    price: 599.00,
-    title: '儿童写真套餐',
-    desc: '含2组造型、10张精修',
-    status: '开票中'
-  }
-])
+// const recordList = ref<InvoiceRecord[]>([
+//   {
+//     id: 1,
+//     invoiceNumber: 'FP202312270001',
+//     invoiceTime: '2023.12.27 9:30:28',
+//     price: 399.00,
+//     title: '摄影服务费',
+//     desc: '包含2组服务项目',
+//     status: '已开票'
+//   },
+//   {
+//     id: 2,
+//     invoiceNumber: 'FP202312280002',
+//     invoiceTime: '2023.12.28 14:20:33',
+//     price: 899.00,
+//     title: '婚纱摄影套餐',
+//     desc: '含化妆、拍摄、精修服务',
+//     status: '已开票'
+//   },
+//   {
+//     id: 3,
+//     invoiceNumber: 'FP202312290003',
+//     invoiceTime: '2023.12.29 16:45:12',
+//     price: 599.00,
+//     title: '儿童写真套餐',
+//     desc: '含2组造型、10张精修',
+//     status: '开票中'
+//   }
+// ])
 </script>
 
 <style lang="scss" scoped>
@@ -412,6 +293,7 @@ const recordList = ref([
   position: fixed;
   top: 0;
   left: 0;
+
   &-blank {
     width: 100%;
     height: 150rpx;
@@ -477,7 +359,6 @@ const recordList = ref([
 
   .order-price {
     font-size: 40rpx;
-    color: #1a1f36;
     font-weight: 600;
   }
 }
@@ -497,11 +378,28 @@ const recordList = ref([
       font-weight: 500;
     }
 
-    .service-desc {
+    .service-time,
+    .service-location,
+    .service-photographer {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 12rpx;
       font-size: 28rpx;
       color: #697386;
       line-height: 1.6;
+
+      &::before {
+        content: attr(data-label);
+        flex: 0 0 140rpx;
+        color: #697386;
+      }
     }
+  }
+
+  .service-desc {
+    font-size: 28rpx;
+    color: #697386;
+    line-height: 1.6;
   }
 
   .service-tag {
@@ -546,6 +444,7 @@ const recordList = ref([
       display: flex;
       align-items: center;
     }
+
     .btn {
       display: flex;
       align-items: center;
@@ -560,12 +459,10 @@ const recordList = ref([
       border-radius: 10rpx;
     }
   }
+}
 
-  &-blank {
-    width: 100%;
-    height: 200rpx;
-  }
-
-
+.invoice-footer-blank {
+  width: 100%;
+  height: 200rpx;
 }
 </style>

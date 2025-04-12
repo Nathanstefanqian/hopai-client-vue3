@@ -315,8 +315,6 @@ const actions = computed(() => {
   } else if (![100, 10, 20, 30].includes(orderStatus)) {
     actionItems.push({ name: '申请退款', color: '#ba2636' })
   }
-  
-  actionItems.push({ name: '开具发票' })
   return actionItems
 })
 

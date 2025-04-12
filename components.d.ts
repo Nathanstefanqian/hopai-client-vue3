@@ -17,5 +17,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Tab: typeof import('./src/components/my/Tab.vue')['default']
+    Webview: typeof import('./src/components/webview/index.vue')['default']
   }
 }

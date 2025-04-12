@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { getPhotoPage, getOrderOriginPhotos } from '@/api/home/photo'
+import { getAlbumPhoto } from '@/api/album';
 // import { useSts } from '@/hooks/useOss'
 
 // 定义页面参数
@@ -64,10 +65,10 @@ const fetchOrderPhotos = async () => {
 const fetchAlbumPhotos = async () => {
   try {
     loading.value = true;
-    const res = await getPhotoPage(pageNo.value, pageSize.value, id.value);
+    const res = await getAlbumPhoto({ pageNo: pageNo.value, pageSize: pageSize.value, id: id.value });
     const processedList = await Promise.all(
       res.data.list.map(async (item: any) => {
-        const baseUrl = item.url;
+        const baseUrl = item.picUrl;
         return {
           picUrl: baseUrl + '/minipreview',
           originalUrl: baseUrl,

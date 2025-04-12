@@ -1,20 +1,21 @@
 <template>
   <div class="auth w-100vw h-100vh relative">
     <div class="auth-main">
-      <image :src="netConfig.picURL + '/static/auth/auth-login.svg'"></image>
-      <div class="auth-main-btn" @click="handleAuthorize">微信授权用户信息</div>
+      <image :src="netConfig.picURL + '/static/auth/auth-login.svg'" class="auth-main-img"></image>
+      <div class="auth-main-btn" @click="handleAuthorize">手机号快捷登录</div>
+      <div class="auth-main-btn auth-main-btn2" @click="goBack">不登录，返回</div>
       <div class="auth-main-check" :class="{ shake: shake }">
         <up-checkbox class="mr-[16rpx]" shape="circle" @change="proxy = !proxy" v-model="proxy" usedAlone  />
         <div class="text w-[485rpx]">
-          阅读并同意我们的<span class="blue">"服务协议与隐私条款"</span>以及<span class="blue">个人信息保护指引</span>
+          阅读并同意我们的<span class="blue" @click="handleProxy(0)">"服务协议与隐私条款"</span>以及<span class="blue" @click="handleProxy(1)">个人信息保护指引</span>
         </div>
       </div>
     </div>
   </div>
   <up-popup :show="show" @close="show = false" :round="10" closeable class="relative">
     <view class="auth-popup">
-        <div class="title">HOPAI申请绑定您的手机号码</div>
-        <div class="desc">您的手机号码将用于登录和注册，不会有其他用途，请您允许授权</div>
+        <div class="title">HOPAI申请手机快捷登录</div>
+        <div class="desc">您的手机号码将用于登录和注册，不会有其他用途，请您允许手机快捷登录</div>
         <div class="btn-group">
           <button class="btn btn-cancel" @click="show = false">取消</button>
           <button class="btn btn-accept" open-type="getPhoneNumber" @getphonenumber="getUserPhoneNumber">确定</button>
@@ -43,6 +44,22 @@ const handleAuthorize = () => {
   } else {
     show.value = true
   }
+}
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+
+const handleProxy = (type: any) => {
+  let url = ''
+  if(type) {
+    url  ='https://mp.weixin.qq.com/s/PhHS3sdbaF_aKfOPj6sZnA'
+  } else {
+    url = 'https://mp.weixin.qq.com/s/xtWxpJXcm25yieQo5A4zfQ'
+  }
+  uni.navigateTo({
+    url: `/components/webview/index?url=${url}`
+  })
 }
 
 
@@ -75,7 +92,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @import '@/styles/animation.scss';
-
 .auth-popup {
   display: flex;
   flex-direction: column;
@@ -129,28 +145,50 @@ onMounted(async () => {
     justify-content: center;
     width: 100%;
     position: absolute;
-    top: 368rpx;
+    top: 20%;
 
+    &-back {
+      position: absolute;
+      top: 90rpx;
+      left: 20rpx;
+      width: 40rpx;
+      height: 40rpx;
+    }
+
+    &-img {
+      width: 80%;
+      height: 28vh;
+    }
     &-btn {
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
-      margin-top: 380rpx;
+      margin-top: 50%;
       width: 480rpx;
       height: 80rpx;
       border-radius: 12rpx;
       background-color: #ba2636;
     }
+    &-btn2 {
+      margin-top: 40rpx !important;
+      background-color: #000;
+      color: #fff;
+    }
 
     &-check {
       display: flex;
-      margin-top: 192rpx;
+      margin-top: 10%;
       font-size: 28rpx;
       color: rgba(40, 40, 40, 0.50);
 
       .blue {
+        font-size: 28rpx;
         color: #264FBA !important;
+      }
+
+      .text {
+        font-size: 28rpx;
       }
     }
   }
