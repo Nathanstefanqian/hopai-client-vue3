@@ -14,7 +14,7 @@
       </div>
       <div class="form-item">
         <span class="label">税号</span>
-        <input type="text" v-model="form.taxNumber" :placeholder="form.type === 1 ? '请输入纳税人身份证号' : '请输入纳税人识别号'" class="input" />
+        <input type="text" v-model="form.taxNumber" :placeholder="form.type === 1 ? '请输入纳税人身份证号' : '请输入纳税人识别号'" class="input" :class="{ 'error': taxNumberError }" />
       </div> 
       <div class="form-item">
         <span class="label">已确认订单</span>
@@ -31,8 +31,8 @@
         <div class="input">¥ {{ form.amount }}</div>
       </div>
       <div class="form-item">
-        <span class="label">邮箱（选填）</span>
-        <input type="email" v-model="form.email" placeholder="请输入邮箱" class="input" />
+        <span class="label">邮箱</span>
+        <input type="email" v-model="form.email" placeholder="请输入邮箱" class="input" :class="{ 'error': emailError }" />
       </div>
       <div class="form-item">
         <span class="label">地址（选填）</span>
@@ -112,15 +112,57 @@ const form = ref({
   remark: ''
 });
 
+const emailError = ref(false);
+const taxNumberError = ref(false);
+
+const validateEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validateIdCard = (idCard: string) => {
+  const idCardRegex = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;
+  return idCardRegex.test(idCard);
+};
+
+const validateSocialCreditCode = (code: string) => {
+  const socialCreditCodeRegex = /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/;
+  return socialCreditCodeRegex.test(code);
+};
+
 const handleSubmit = async () => {
+  emailError.value = false;
+  taxNumberError.value = false;
+
   if (!form.value.title) {
     message({ title: '请输入发票抬头' });
     return;
   }
-  if (form.value.type === 2 && !form.value.taxNumber) {
-    message({ title: '请输入纳税人识别号' });
+
+  if (!form.value.email || !validateEmail(form.value.email)) {
+    emailError.value = true;
+    message({ title: '请输入正确的邮箱地址' });
     return;
   }
+
+  if (!form.value.taxNumber) {
+    taxNumberError.value = true;
+    message({ title: form.value.type === 1 ? '请输入纳税人身份证号' : '请输入纳税人识别号' });
+    return;
+  }
+
+  if (form.value.type === 1 && !validateIdCard(form.value.taxNumber)) {
+    taxNumberError.value = true;
+    message({ title: '请输入正确的身份证号' });
+    return;
+  }
+
+  if (form.value.type === 2 && !validateSocialCreditCode(form.value.taxNumber)) {
+    taxNumberError.value = true;
+    message({ title: '请输入正确的统一社会信用代码' });
+    return;
+  }
+
   if (!form.value.amount) {
     message({ title: '请输入发票金额' });
     return;
@@ -190,6 +232,10 @@ const handleSubmit = async () => {
         padding: 0 24rpx;
         box-sizing: border-box;
         font-size: 28rpx;
+
+        &.error {
+          border: 2rpx solid #ba2636;
+        }
       }
 
       .radio-group {

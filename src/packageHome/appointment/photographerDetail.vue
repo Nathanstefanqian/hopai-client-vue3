@@ -1,6 +1,8 @@
 <template>
   <div class="photographerDetail">
-    <div class="bgc"></div>
+    <div class="bgc">
+      <image class="bgc-avatar" :src="photographerInfo.avatar || netConfig.picURL + '/static/my/avatar.jpg'" mode="aspectFill" />
+    </div>
     <div class="photographer">
       <div class="photographer-main">
         <div class="photographer-main-1">
@@ -30,34 +32,33 @@
           </div>
         </div>
         <div class="photographer-main-2">
-          <div class="main-header">
-            <div class="main-header-item" @click="switchTab(0)" :class="{ active: currentTab === 0 }">
-              <span>他的作品</span>
-              <div class="red" v-show="currentTab === 0"></div>
+          <up-sticky :offset-top="0">
+            <div class="main-header">
+              <up-tabs :list="tabList" v-model:current="currentTab" lineColor="#ba2636" :activeStyle="{
+                color: '#ba2636',
+                fontWeight: 'bold',
+                transform: 'scale(1.05)'
+              }" />
             </div>
-            <div class="main-header-item" @click="switchTab(1)" :class="{ active: currentTab === 1 }">
-              <span>客户评价</span>
-              <div class="red" v-show="currentTab === 1"></div>
-            </div>
-          </div>
+          </up-sticky>
           <div class="main-body">
             <up-skeleton :loading="loading" :rows="3" v-if="currentTab === 0">
               <div class="my-main-basic-album" v-if="currentTab === 0">
-                  <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无相册" />
-                  <div class="album" v-for="item,index in album" :key="index" v-if="album.length" @click="handlePhoto(item.id)">
-                  <image class="album-image" :src="item.picUrl || netConfig.picURL + '/static/my/gf5.jpg'" mode="aspectFill" />
-                  <div class="album-desc">
-                    <div class="title">{{ item.title }}</div>
-                    <div class="op">
-                      <span class="number">{{ item.photoNum }}</span>
-                    </div>
+                <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无相册" paddingTop="0" />
+                <div class="album" v-for="item,index in album" :key="index" v-if="album.length" @click="handlePhoto(item.id)">
+                <image class="album-image" :src="item.picUrl || netConfig.picURL + '/static/my/gf5.jpg'" mode="aspectFill" />
+                <div class="album-desc">
+                  <div class="title">{{ item.title }}</div>
+                  <div class="op">
+                    <span class="number">{{ item.photoNum }}</span>
                   </div>
-                  </div>
+                </div>
+                </div>
               </div>
             </up-skeleton>
             <up-skeleton :loading="loading" :rows="3" v-if="currentTab === 1">
               <div class="reviews" v-if="currentTab === 1">
-                <EmptyState v-if="reviews.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无评价" />
+                <EmptyState v-if="reviews.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="暂无评价" paddingTop="0" />
                 <div class="review-item" v-for="(review, index) in reviews" :key="index">
                   <div class="review-header">
                     <image class="reviewer-avatar" :src="netConfig.picURL + '/static/my/avatar.jpg'" mode="aspectFill" />
@@ -96,6 +97,15 @@ const album = ref<any[]>([]);
 const pageNo = ref(1);
 const pageSize = ref(10);
 const loading = ref(false);
+
+interface TabItem {
+  name: string;
+}
+
+const tabList: TabItem[] = [
+  { name: '他的作品' },
+  { name: '客户评价' }
+];
 
 onLoad(async (options: any) => {
   if (options.userId) {
@@ -180,6 +190,7 @@ const formatDate = (timestamp: number) => {
 <style lang="scss" scoped>
 .photographerDetail {
   width: 100vw;
+  min-height: 100vh;
   background-color: #f6f6f6;
 
   .blank {
@@ -192,14 +203,19 @@ const formatDate = (timestamp: number) => {
     left: 0;
     width: 100vw;
     height: 460rpx;
-    background-image: url('https://hopai-system.oss-cn-shanghai.aliyuncs.com/static/client/static/home/photographer.svg');
+    // background-image: v-bind("photographerInfo.avatar ? `url(${photographerInfo.avatar})` : `url(${netConfig.picURL}/static/my/avatar.jpg)`");
     background-size: cover;
     background-repeat: no-repeat;
+    &-avatar{
+      width: 100vw;
+      filter: blur(10rpx);
+    }
   }
 
   .photographer {
     padding: 360rpx 32rpx 32rpx;
     position: relative;
+    overflow: hidden;
 
     &-main {
       background-color: #f6f6f6;
@@ -293,9 +309,9 @@ const formatDate = (timestamp: number) => {
           .my-main-basic-album {
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
             flex-wrap: wrap;
-
+            justify-content: space-between;
+            align-items: center;
             .album {
               box-sizing: border-box;
               display: flex;
@@ -336,23 +352,14 @@ const formatDate = (timestamp: number) => {
               }
             }
 
-            .album-empty {
-              display: flex;
-              width: 100%;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              margin-bottom: 40rpx;
 
-              .title {
-                color: rgba(0,0,0,0.3);
-                font-size: 28rpx;
-              }
-            }
           }
 
           .reviews {
-            padding: 0 20rpx;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-wrap: wrap;
             .review-item {
               background: #fff;
               border-radius: 12rpx;
@@ -410,4 +417,3 @@ const formatDate = (timestamp: number) => {
 }
 </style>
 
-import EmptyState from '@/components/common/EmptyState.vue';

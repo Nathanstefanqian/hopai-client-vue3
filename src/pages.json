@@ -182,6 +182,12 @@
           "style": {
             "navigationBarTitleText": "确认照片"
           }
+        },
+        {
+          "path": "originalPhoto/index",
+          "style": {
+            "navigationBarTitleText": "原图下载"
+          }
         }
       ]
     }

@@ -343,17 +343,19 @@ const handleOrderItemClick = (item: OrderItem) => {
 
   .order-info {
     flex: 1;
-
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  
     .order-number {
       font-size: 32rpx;
       color: #1a1f36;
       font-weight: 500;
     }
-
+  
     .order-time {
       font-size: 28rpx;
       color: #697386;
-      margin-top: 16rpx;
     }
   }
 

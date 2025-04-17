@@ -16,6 +16,10 @@ defineProps({
   icon: {
     type: String,
     required: true
+  },
+  paddingTop: {
+    type: String,
+    default: '40rpx'
   }
 })
 </script>
@@ -27,7 +31,8 @@ defineProps({
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 40rpx;
+  padding: 0 40rpx 40rpx;
+  padding-top: v-bind(paddingTop);
   
   .empty-icon {
     width: 600rpx;

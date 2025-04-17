@@ -3,54 +3,67 @@
     <up-skeleton :loading="loading" :rows="3">
       <div class="photo">
         <div class="photo-item" v-for="(item, index) in list" :key="index" @click="previewPicture(item.originalUrl)">
-          <image :src="item.picUrl" class="photo-item-image" mode="aspectFill" />
+          <image :src="item.picUrl" class="photo-item-image" mode="aspectFill" lazy-load="true" />
           <div class="checkbox">
             <up-checkbox usedAlone v-model:checked="item.selected" v-if="isSelected" shape="circle" activeColor="#ba2636" />
           </div>
         </div>
       </div>
+      <up-loadmore :status="loadMoreStatus" />
+
     </up-skeleton>
-    <!-- <up-loadmore :status="loadMoreStatus" /> -->
     <div class="footer-blank"></div>
     <div class="footer">
-      <div class="footer-btn mr-30rpx" @click="cancelSelected">原图下载</div>
-      <div class="footer-btn" @click="handleSelected">确认下载</div>
+      <div class="footer-btn mr-30rpx" @click="cancelSelected">取消选择</div>
+      <div class="footer-btn" @click="handleSelected"> {{ isSelected ? '确认下载' : '批量选择' }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { getPhotoPage, getOrderOriginPhotos } from '@/api/home/photo'
-import { getAlbumPhoto } from '@/api/album';
-// import { useSts } from '@/hooks/useOss'
+import { selectUserPhotos } from '@/api/order'
+
+interface PhotoItem {
+  id: string;
+  picUrl: string;
+  originalUrl: string;
+  selected: boolean;
+}
 
 // 定义页面参数
 const id = ref<string>('');
 const orderId = ref<string>('');
 const pageNo = ref<number>(1);
-const pageSize = ref<number>(100);
+const pageSize = ref<number>(12);
 const loading = ref<boolean>(true);
 const finished = ref<boolean>(false);
-const loadMoreStatus = ref<'loading' | 'nomore' | 'more'>('more');
+const loadMoreStatus = ref<'loading' | 'nomore' | 'loadmore' | 'undefined'>('loadmore');
 const orderInfo = ref<any>(null);
 
 // 定义图片列表
-const list = ref<Array<{ picUrl: string; selected: boolean; originalUrl: string }>>([]);
-const isSelected = ref<boolean>(true);
-// let getStsToken: () => Promise<void>;
-// let signatrueUrl: (url: string) => Promise<string>;
+const allPhotos = ref<PhotoItem[]>([]); // 存储所有图片
+const list = ref<PhotoItem[]>([]); // 当前显示的图片
+const isSelected = ref<boolean>(false);
+const MAX_SELECTED = 12;
+
+// 计算已选择的图片数量
+const selectedCount = computed(() => list.value.filter(item => item.selected).length);
 
 // 获取订单原图数据
 const fetchOrderPhotos = async () => {
   try {
     loading.value = true;
     const res = await getOrderOriginPhotos(orderId.value);
-    const processedList = res.data.map((item: any) => ({
-      picUrl: item.picUrl,
+    
+    allPhotos.value = res.data.map((item:any) => ({ 
+      ...item, 
+      selected: false,
       originalUrl: item.picUrl,
-      selected: false
+      picUrl: item.picUrl + '/minipreview',
     }));
-    list.value = processedList;
+    // 初始加载第一页数据
+    loadMorePhotos();
   } catch (error) {
     uni.showToast({
       title: '加载失败，请重试',
@@ -61,79 +74,72 @@ const fetchOrderPhotos = async () => {
   }
 };
 
-// 获取相册照片
-const fetchAlbumPhotos = async () => {
-  try {
-    loading.value = true;
-    const res = await getAlbumPhoto({ pageNo: pageNo.value, pageSize: pageSize.value, id: id.value });
-    const processedList = await Promise.all(
-      res.data.list.map(async (item: any) => {
-        const baseUrl = item.picUrl;
-        return {
-          picUrl: baseUrl + '/minipreview',
-          originalUrl: baseUrl,
-          selected: false
-        };
-      })
-    );
-    
-    if (pageNo.value === 1) {
-      list.value = processedList;
-    } else {
-      list.value = [...list.value, ...processedList];
-    }
-    
-    // if (res.data.list.length < pageSize.value) {
-    //   finished.value = true;
-    //   loadMoreStatus.value = 'nomore';
-    // } else {
-    //   loadMoreStatus.value = 'more';
-    // }
-  } catch (error) {
-    uni.showToast({
-      title: '加载失败，请重试',
-      icon: 'none'
-    });
-    loadMoreStatus.value = 'more';
-  } finally {
-    loading.value = false;
+// 加载更多图片
+const loadMorePhotos = () => {
+  const start = (pageNo.value - 1) * pageSize.value;
+  const end = pageNo.value * pageSize.value;
+  const newPhotos = allPhotos.value.slice(start, end);
+  
+  if (newPhotos.length > 0) {
+    setTimeout(() => {
+      list.value = [...list.value,...newPhotos];
+      loadMoreStatus.value = start + pageSize.value >= allPhotos.value.length? 'nomore' : 'loadmore';
+    }, 500);
+  } else {
+    loadMoreStatus.value = 'nomore';
   }
+  loading.value = false;
 };
+
+
 
 // 页面加载时获取参数
 onLoad(async (options: any) => {
-  if (options.id || options.orderId) {
-    id.value = options.id;
+  if (options.orderId) {
     orderId.value = options.orderId;
-    
-      await fetchAlbumPhotos();
+    await fetchOrderPhotos();
+  }
+})
+
+// 监听页面上拉触底事件
+onReachBottom(async () => {
+  if (loadMoreStatus.value === 'loadmore') {
+    loadMoreStatus.value = 'loading';
+    pageNo.value++;
+    loadMorePhotos();
   }
 });
 
-// 监听页面上拉触底事件
-// onReachBottom(async () => {
-//   if (!finished.value && loadMoreStatus.value !== 'loading') {
-//     loadMoreStatus.value = 'loading';
-//     pageNo.value++;
-//     await fetchAlbumPhotos();
-//   }
-// });
-
 // 定义图片预览函数
 const previewPicture = (currentUrl: string) => {
-  const imageUrls = list.value.map(item => item.originalUrl);
   const currentIndex = list.value.findIndex(item => item.originalUrl === currentUrl);
+  const startIndex = Math.max(0, currentIndex - 5);
+  const endIndex = Math.min(list.value.length, startIndex + 10);
+  const previewUrls = list.value.slice(startIndex, endIndex).map(item => item.originalUrl);
+  
   uni.previewImage({
-    urls: imageUrls,
-    current: imageUrls[currentIndex]
+    urls: previewUrls,
+    current: currentUrl
   });
 }
 
 const cancelSelected = () => {
-  uni.navigateTo({
-    url: `/packageAlbum/originalPhoto/index?orderId=${orderId.value}`
-  });
+  isSelected.value = false
+  list.value.map(item => item.selected = false)
 }
+
+const handlePhotoSelect = (item: PhotoItem) => {
+  if (item.selected) {
+    item.selected = false;
+  } else if (selectedCount.value < MAX_SELECTED) {
+    item.selected = true;
+  } else {
+    uni.showToast({
+      title: `最多只能选择${MAX_SELECTED}张图片`,
+      icon: 'none'
+    });
+  }
+};
 
 const handleSelected = () => {
   if (isSelected.value) {
@@ -153,12 +159,11 @@ const handleSelected = () => {
     isSelected.value = true;
   }
 }
-
 const downloadSelectedImages = () => {
   uni.showToast({
     title: '保存中...',
     icon: 'loading'
-  });
+  })
   const selectedImages = list.value.filter(item => item.selected).map(item => item.originalUrl);
   
   if (selectedImages.length > 0) {
@@ -254,6 +259,13 @@ const downloadSelectedImages = () => {
         top: 0;
         right: 0;
       }
+    }
+    &-tip {
+      width: 100%;
+      text-align: center;
+      font-size: 24rpx;
+      color: #999;
+      margin-top: 20rpx;
     }
   }
 

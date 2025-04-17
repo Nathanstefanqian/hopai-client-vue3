@@ -84,7 +84,9 @@ const handleCallService = () => {
 
     .contact-box-title {
       padding: 16rpx 0;
-      // color: #ba2636;
+      color: #ba2636;
+      font-weight: 700;
+      font-size: 34rpx;
     }
     .divider {
       height: 4rpx;

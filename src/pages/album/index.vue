@@ -2,192 +2,195 @@
   <div class="album w-100vw h-100vh flex">
     <scroll-view class="album-tab-scrollview" scroll-x="true">
       <div class="album-tab">
-        <div class="tab" v-for="item,index in tabList" :key="index" @click="handleClick(index)">
+        <!-- <div class="tab" v-for="item,index in tabList" :key="index" @click="handleClick(index)">
           <span class="mb-[10rpx]" :style="active === index ? { color: '#ba2636' } : {}">{{ item.name }}</span>
           <div class="svg-icon" v-if="active === index"></div>
-        </div>
+        </div> -->
+        <up-tabs
+          :list="tabList"
+          v-model:current="active"
+          @change="handleClick"
+          lineColor="#ba2636"
+          :activeStyle="{
+            color: '#ba2636',
+            fontWeight: 'bold',
+            transform: 'scale(1.05)',
+          }"
+        />
       </div>
     </scroll-view>
-      <scroll-view class="album-main-scrollview" scroll-y="true" @scrolltolower="handleLoadMore">
-        <div class="album-main">
-          <!-- 这里必须叠一层 -->
-          <div class="album-main-layout"> 
-            <up-skeleton :rows="3" :loading="loading">
-              <div class="album-main-layout-flex">
-                <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="当前没有相册" />
-                <div class="album-item" v-else @click="handlePhoto(item)" v-for="item, index in album" :key="item.id">
-                  <image :src="item.backgroundUrl" class="album-item-image" mode="aspectFill" />
-                  <div class="album-item-title">{{ item.name }}</div>
-                  <div class="album-item-desc">
-                    <span style="font-size: 36rpx;">{{ item.number || 0 }}</span>
-                    <span>{{ new Date(item.createTime).getFullYear() + '.' + (new Date(item.createTime).getMonth() + 1) + '.' + new Date(item.createTime).getDate() }}</span>
-                  </div>
+    <scroll-view class="album-main-scrollview" scroll-y="true" @scrolltolower="handleLoadMore">
+      <div class="album-main">
+        <!-- 这里必须叠一层 -->
+        <div class="album-main-layout">
+          <up-skeleton :rows="3" :loading="loading">
+            <div class="album-main-layout-flex">
+              <EmptyState v-if="album.length === 0" :icon="netConfig.picURL + '/static/empty.svg'" text="当前没有相册" />
+              <div class="album-item" v-else @click="handlePhoto(item)" v-for="(item, index) in album" :key="item.id">
+                <image :src="item.backgroundUrl" class="album-item-image" mode="aspectFill" />
+                <div class="album-item-title">{{ item.name }}</div>
+                <div class="album-item-desc">
+                  <span style="font-size: 36rpx">{{ item.number || 0 }}</span>
+                  <span>{{ new Date(item.createTime).getFullYear() + '.' + (new Date(item.createTime).getMonth() + 1) + '.' + new Date(item.createTime).getDate() }}</span>
                 </div>
               </div>
-            </up-skeleton>
-          </div>
-          <div class="load-more" v-if="hasMore || loading">
-            {{ loading ? '加载中...' : hasMore ? '上拉加载更多' : '没有更多了' }}
-          </div>
+            </div>
+          </up-skeleton>
         </div>
-      </scroll-view>
-    </div>
+        <!-- <div class="load-more" v-if="hasMore || loading">
+            {{ loading ? '加载中...' : hasMore ? '上拉加载更多' : '没有更多了' }}
+          </div> -->
+      </div>
+    </scroll-view>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { netConfig } from '@/config/net.config'
-import { getAlbumPage } from '@/api/album/index'
-import EmptyState from '@/components/common/EmptyState.vue'
-const loading = ref(false)
-const album = ref<any>([])
-const pageNo = ref(1)
-const hasMore = ref(true)
-const tabList = ref([
-  { name: '全部', path: '/', categoryId: null },
-  { name: '幸福拍', path: '/discover', categoryId: 12 },
-  { name: '家庭拍', path: '/my', categoryId: 13 },
-  { name: '海外拍', path: '/my', categoryId: 50 },
-  { name: '随心拍', path: '/my', categoryId: 1 }
-])
-const active = ref(0);
-const handleClick = (index: number) => {
-  active.value = index;
-  pageNo.value = 1;
-  album.value = [];
-  hasMore.value = true;
-  getData();
-}
+  import { netConfig } from '@/config/net.config';
+  import { getAlbumPage } from '@/api/album/index';
+  import EmptyState from '@/components/common/EmptyState.vue';
+  const loading = ref(false);
+  const album = ref<any>([]);
+  const pageNo = ref(1);
+  const hasMore = ref(true);
+  const tabList = ref([
+    { name: '全部', path: '/', categoryId: null },
+    { name: '幸福拍', path: '/discover', categoryId: 12 },
+    { name: '家庭拍', path: '/my', categoryId: 13 },
+    { name: '海外拍', path: '/my', categoryId: 50 },
+    { name: '随心拍', path: '/my', categoryId: 1 },
+  ]);
+  const active = ref(0);
+  const handleClick = () => {
+    // active.value = index;
+    pageNo.value = 1;
+    album.value = [];
+    hasMore.value = true;
+    getData();
+  };
 
-const getData = async () => {
-  if (loading.value || !hasMore.value) return;
-  loading.value = true
-  try {
-    const params = {
-      pageNo: pageNo.value,
-      pageSize: 10,
-      categoryId: tabList.value[active.value].categoryId
+  const getData = async () => {
+    if (loading.value || !hasMore.value) return;
+    loading.value = true;
+    try {
+      const params = {
+        pageNo: pageNo.value,
+        pageSize: 100,
+        categoryId: tabList.value[active.value].categoryId,
+      };
+      const res = await getAlbumPage(params);
+      const list = res.data?.list || [];
+      album.value = list;
+    } finally {
+      loading.value = false;
     }
-    const res = await getAlbumPage(params)
-    const list = res.data?.list || []
-    if (list.length < params.pageSize) {
-      hasMore.value = false
-    }
-    album.value = [...album.value, ...list]
-    pageNo.value++
-  } finally {
-    loading.value = false
-  }
-}
+  };
 
-const handleLoadMore = () => {
-  getData()
-}
+  const handleLoadMore = () => {
+    getData();
+  };
 
-const handlePhoto = (item: any) => {
-  uni.navigateTo({
-    url: `/packageAlbum/photo/index?id=${item.id}&orderId=${item.orderId}`
-  })
-}
+  const handlePhoto = (item: any) => {
+    uni.navigateTo({
+      url: `/packageAlbum/photo/index?id=${item.id}&orderId=${item.orderId}`,
+    });
+  };
 
-onLoad(async () => {
-  pageNo.value = 1;
-  album.value = [];
-  hasMore.value = true;
-  await getData()
-})
+  onLoad(async () => {
+    pageNo.value = 1;
+    album.value = [];
+    hasMore.value = true;
+    await getData();
+  });
 
-onPullDownRefresh(async () => {
-  pageNo.value = 1;
-  album.value = [];
-  hasMore.value = true;
-  await getData();
-  uni.stopPullDownRefresh()
-})
-
+  onPullDownRefresh(async () => {
+    pageNo.value = 1;
+    album.value = [];
+    hasMore.value = true;
+    await getData();
+    uni.stopPullDownRefresh();
+  });
 </script>
 
 <style lang="scss" scoped>
-.album-tab-scrollview {
-  width: 100%;
-  white-space: nowrap;
-}
-.album {
-  display: flex;
-  flex-direction: column;
-
-  .album-tab {
+  .album-tab-scrollview {
+    width: 100%;
+    white-space: nowrap;
+  }
+  .album {
     display: flex;
-    flex-direction: row;
-    padding: 24rpx 40rpx;
-    .tab {
+    flex-direction: column;
+
+    .album-tab {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 22rpx 16rpx;
-      margin-right: 24rpx;
-      .svg-icon {
-      height: 4rpx;
-      width: 50rpx;
-      background-color: #ba2636;
-      }
-    }
-  }
-.album-main-scrollview {
- // 确保 album 占据整个视
-  width: 100vw;
-  height: calc(100vh - 140rpx); 
-  background-color: #f6f6f6;
-  white-space: nowrap;
-}
-  .album-main {
-    background-color: #f6f6f6;
-    &-layout {
-      padding: 32rpx;
-      box-sizing: border-box;
-      width: 100%;
-      &-flex {
+      flex-direction: row;
+      padding: 24rpx 40rpx;
+      .tab {
         display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        flex-grow: 1;
-        .album-item {
-          width: 328rpx;
-          height: 564rpx;
-          border-radius: 16rpx;
-          background-color: #fff;
-          margin-bottom: 32rpx;
-          padding: 32rpx;
-          display: flex;
-          flex-direction: column;
-          box-sizing: border-box;
-          
-      &-image {
-        width: 100%;
-        border-radius: 16rpx;
-        margin-bottom: 16rpx;
-      }
-      &-title {
-        margin-bottom: 16rpx;
-      }
-      &-desc {
-        display: flex;
-        justify-content: space-between;
+        flex-direction: column;
         align-items: center;
-        color: rgba(0, 0, 0, 0.30);
+        padding: 22rpx 16rpx;
+        margin-right: 24rpx;
+        .svg-icon {
+          height: 4rpx;
+          width: 50rpx;
+          background-color: #ba2636;
+        }
       }
     }
-      }
-
+    .album-main-scrollview {
+      // 确保 album 占据整个视
+      width: 100vw;
+      height: calc(100vh - 140rpx);
+      background-color: #f6f6f6;
+      white-space: nowrap;
     }
+    .album-main {
+      background-color: #f6f6f6;
+      &-layout {
+        padding: 32rpx;
+        box-sizing: border-box;
+        width: 100%;
+        &-flex {
+          display: flex;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          flex-grow: 1;
+          .album-item {
+            width: 328rpx;
+            height: 564rpx;
+            border-radius: 16rpx;
+            background-color: #fff;
+            margin-bottom: 32rpx;
+            padding: 32rpx;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
 
+            &-image {
+              width: 100%;
+              border-radius: 16rpx;
+              margin-bottom: 16rpx;
+            }
+            &-title {
+              margin-bottom: 16rpx;
+            }
+            &-desc {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              color: rgba(0, 0, 0, 0.3);
+            }
+          }
+        }
+      }
+    }
   }
 
-}
-
-.load-more {
-  text-align: center;
-  padding: 20rpx 0;
-  color: #999;
-  font-size: 24rpx;
-}
+  .load-more {
+    text-align: center;
+    padding: 20rpx 0;
+    color: #999;
+    font-size: 24rpx;
+  }
 </style>

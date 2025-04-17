@@ -5,7 +5,7 @@
       <div class="auth-main-btn" @click="handleAuthorize">手机号快捷登录</div>
       <div class="auth-main-btn auth-main-btn2" @click="goBack">不登录，返回</div>
       <div class="auth-main-check" :class="{ shake: shake }">
-        <up-checkbox class="mr-[16rpx]" shape="circle" @change="proxy = !proxy" v-model="proxy" usedAlone  />
+        <up-checkbox class="mr-[16rpx]" shape="circle" @change="proxy = !proxy" v-model="proxy" usedAlone />
         <div class="text w-[485rpx]">
           阅读并同意我们的<span class="blue" @click="handleProxy(0)">"服务协议与隐私条款"</span>以及<span class="blue" @click="handleProxy(1)">个人信息保护指引</span>
         </div>
@@ -14,183 +14,179 @@
   </div>
   <up-popup :show="show" @close="show = false" :round="10" closeable class="relative">
     <view class="auth-popup">
-        <div class="title">HOPAI申请手机快捷登录</div>
-        <div class="desc">您的手机号码将用于登录和注册，不会有其他用途，请您允许手机快捷登录</div>
-        <div class="btn-group">
-          <button class="btn btn-cancel" @click="show = false">取消</button>
-          <button class="btn btn-accept" open-type="getPhoneNumber" @getphonenumber="getUserPhoneNumber">确定</button>
-        </div>
+      <div class="title">HOPAI申请手机快捷登录</div>
+      <div class="desc">您的手机号码将用于登录和注册，不会有其他用途，请您允许手机快捷登录</div>
+      <div class="btn-group">
+        <button class="btn btn-cancel" @click="show = false">取消</button>
+        <button class="btn btn-accept" open-type="getPhoneNumber" @getphonenumber="getUserPhoneNumber">确定</button>
+      </div>
     </view>
   </up-popup>
 </template>
 
 <script setup lang="ts">
-import { useNotification } from '@/hooks/useNotification';
-import { useUserStore } from '@/pinia/user'
-import { netConfig } from '@/config/net.config';
-const userStore = useUserStore()
-const { message } = useNotification()
-const proxy = ref(false)
-const show = ref(false)
-const shake = ref(false)
-const loginCode = ref('')
-const handleAuthorize = () => {
-  if(!proxy.value) {
-    message({ title: '请先阅读并同意平台协议' })
-    shake.value = true
-    setTimeout(() => {
-      shake.value = false
-    }, 1000);
-  } else {
-    show.value = true
-  }
-}
+  import { useNotification } from '@/hooks/useNotification';
+  import { useUserStore } from '@/pinia/user';
+  import { netConfig } from '@/config/net.config';
+  const userStore = useUserStore();
+  const { message } = useNotification();
+  const proxy = ref(false);
+  const show = ref(false);
+  const shake = ref(false);
+  const loginCode = ref('');
+  const handleAuthorize = () => {
+    if (!proxy.value) {
+      message({ title: '请先阅读并同意平台协议' });
+      shake.value = true;
+      setTimeout(() => {
+        shake.value = false;
+      }, 1000);
+    } else {
+      show.value = true;
+    }
+  };
 
-const goBack = () => {
-  uni.navigateBack({ delta: 1 })
-}
+  const goBack = () => {
+    uni.navigateBack({ delta: 1 });
+  };
 
-const handleProxy = (type: any) => {
-  let url = ''
-  if(type) {
-    url  ='https://mp.weixin.qq.com/s/PhHS3sdbaF_aKfOPj6sZnA'
-  } else {
-    url = 'https://mp.weixin.qq.com/s/xtWxpJXcm25yieQo5A4zfQ'
-  }
-  uni.navigateTo({
-    url: `/components/webview/index?url=${url}`
-  })
-}
+  const handleProxy = (type: any) => {
+    let url = '';
+    if (type) {
+      url = 'https://mp.weixin.qq.com/s/PhHS3sdbaF_aKfOPj6sZnA';
+    } else {
+      url = 'https://mp.weixin.qq.com/s/xtWxpJXcm25yieQo5A4zfQ';
+    }
+    uni.navigateTo({
+      url: `/components/webview/index?url=${url}`,
+    });
+  };
 
+  const getUserPhoneNumber = async (e: any) => {
+    if (!e.detail.code) {
+      message({ title: '请先授权才能登录噢' });
+      return;
+    }
+    const phoneCode = e.detail.code;
+    try {
+      await userStore.login({ phoneCode, loginCode: loginCode.value, userType: 1 });
+    } catch (e: any) {
+      message({ title: e });
+      return;
+    }
 
-const getUserPhoneNumber = async (e: any) => {
-  if(!e.detail.code) {
-    message({ title: '请先授权才能登录噢' })
-    return
-  } 
-  const phoneCode = e.detail.code
-  try {
-    await userStore.login({ phoneCode, loginCode: loginCode.value, userType: 1 })
-  } catch(e: any) {
-    message({ title: e })
-    return
-  }
+    uni.reLaunch({ url: '/pages/home/index' });
+    message({ title: '授权成功' });
+  };
 
-
-  uni.reLaunch({ url: '/pages/home/index' })
-  message({title: '授权成功' })
-}
-
-const getAppCode = async () => {
-  const res = await uni.login({ provider: "weixin" })
-  return res.code
-}
-onMounted(async () => {
-  loginCode.value = await getAppCode()
-})
+  const getAppCode = async () => {
+    const res = await uni.login({ provider: 'weixin' });
+    return res.code;
+  };
+  onMounted(async () => {
+    loginCode.value = await getAppCode();
+  });
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/animation.scss';
-.auth-popup {
-  display: flex;
-  flex-direction: column;
-  margin-top: 28rpx;
-  padding: 54rpx;
-
-  .title {
-    font-size: 36rpx;
-    font-weight: 500;
-    margin-bottom: 80rpx;
-  }
-
-  .desc {
-    font-size: 28rpx;
-    color: rgba(40, 40, 40, 0.50);
-  }
-
-  .btn-group {
+  @import '@/styles/animation.scss';
+  .auth-popup {
     display: flex;
-    justify-content: space-around;
-    margin-top: 90rpx;
-
-    .btn {
-      font-size: 32rpx;
-      padding: 0 96rpx;
-      border-radius: 10rpx;
-
-      &-cancel {
-        color: #ba2636;
-        background-color: #f8f8f8;
-      }
-
-      &-accept {
-        color: #fff;
-        background-color: #ba2636;
-      }
-    }
-
-
-  }
-}
-
-.auth {
-  display: flex;
-  flex-direction: column;
-
-  &-main {
-    display: flex;
-    align-items: center;
     flex-direction: column;
-    justify-content: center;
-    width: 100%;
-    position: absolute;
-    top: 20%;
+    margin-top: 28rpx;
+    padding: 54rpx;
 
-    &-back {
-      position: absolute;
-      top: 90rpx;
-      left: 20rpx;
-      width: 40rpx;
-      height: 40rpx;
+    .title {
+      font-size: 36rpx;
+      font-weight: 500;
+      margin-bottom: 80rpx;
     }
 
-    &-img {
-      width: 80%;
-      height: 28vh;
+    .desc {
+      font-size: 28rpx;
+      color: rgba(40, 40, 40, 0.5);
     }
-    &-btn {
+
+    .btn-group {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 90rpx;
+
+      .btn {
+        font-size: 32rpx;
+        padding: 0 96rpx;
+        border-radius: 10rpx;
+
+        &-cancel {
+          color: #ba2636;
+          background-color: #f8f8f8;
+        }
+
+        &-accept {
+          color: #fff;
+          background-color: #ba2636;
+        }
+      }
+    }
+  }
+
+  .auth {
+    display: flex;
+    flex-direction: column;
+
+    &-main {
       display: flex;
       align-items: center;
+      flex-direction: column;
       justify-content: center;
-      color: #fff;
-      margin-top: 50%;
-      width: 480rpx;
-      height: 80rpx;
-      border-radius: 12rpx;
-      background-color: #ba2636;
-    }
-    &-btn2 {
-      margin-top: 40rpx !important;
-      background-color: #000;
-      color: #fff;
-    }
+      width: 100%;
+      position: absolute;
+      top: 20%;
 
-    &-check {
-      display: flex;
-      margin-top: 10%;
-      font-size: 28rpx;
-      color: rgba(40, 40, 40, 0.50);
-
-      .blue {
-        font-size: 28rpx;
-        color: #264FBA !important;
+      &-back {
+        position: absolute;
+        top: 90rpx;
+        left: 20rpx;
+        width: 40rpx;
+        height: 40rpx;
       }
 
-      .text {
+      &-img {
+        width: 80%;
+        height: 28vh;
+      }
+      &-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        margin-top: 50%;
+        width: 480rpx;
+        height: 80rpx;
+        border-radius: 12rpx;
+        background-color: #ba2636;
+      }
+      &-btn2 {
+        margin-top: 40rpx !important;
+        background-color: #000;
+        color: #fff;
+      }
+
+      &-check {
+        display: flex;
+        margin-top: 10%;
         font-size: 28rpx;
+        color: rgba(40, 40, 40, 0.5);
+
+        .blue {
+          font-size: 28rpx;
+          color: #264fba !important;
+        }
+
+        .text {
+          font-size: 28rpx;
+        }
       }
     }
   }
-}
 </style>

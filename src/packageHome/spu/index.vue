@@ -1,15 +1,10 @@
 <template>
   <div class="spu w-100vw" v-if="!loading">
+    <!-- <image class="spu-back" :src="netConfig.picURL + '/static/my/back.svg'" @click="handleBack()" /> -->
     <up-swiper v-if="spuDetail.sliderPicUrls?.length" class="spu-swiper" :list="spuDetail.sliderPicUrls" indicator circular height="900rpx" @change="(e: any)=> current = e.current">
       <template #indicator>
         <div class="indicator">
-          <view
-            class="indicator__dot"
-            v-for="(item, index) in spuDetail.sliderPicUrls"
-            :key="index"
-            :class="[index === current && 'indicator__dot--active']"
-          >
-          </view>
+          <view class="indicator__dot" v-for="(item, index) in spuDetail.sliderPicUrls" :key="index" :class="[index === current && 'indicator__dot--active']"> </view>
         </div>
       </template>
     </up-swiper>
@@ -21,17 +16,17 @@
           <div class="card-top">
             <div class="tag">{{ spuDetail.name }}</div>
             <div class="desc">
-                <div class="title">{{ spuDetail.introduction }}</div>
-                <div class="price">
-                  ￥
-                  <span class="price-num">{{ spuDetail.skus?.[0]?.price / 100 || 0 }}元</span>
-                  起
-                </div>
+              <div class="title">{{ spuDetail.introduction }}</div>
+              <div class="price">
+                ￥
+                <span class="price-num">{{ spuDetail.skus?.[0]?.price / 100 || 0 }}元</span>
+                起
+              </div>
             </div>
           </div>
           <div class="card-divider"></div>
           <div class="card-bottom">
-            <div class="card-bottom-item" v-for="(item,index) in card" :key="index">
+            <div class="card-bottom-item" v-for="(item, index) in card" :key="index">
               <div class="card-bottom-item-one">
                 <image :src="netConfig.picURL + '/static/home/' + item.url" class="icon" />
               </div>
@@ -40,16 +35,20 @@
           </div>
         </div>
         <div class="spu-desc">
-          <div class="spu-desc-header">
-            <div class="spu-desc-header-item" @click="currentTab = 0" :class="{ active: currentTab === 0 }">
-              <span>产品详情</span>
-              <div class="red" v-show="currentTab === 0"></div>
+          <up-sticky :offset-top="0">
+            <div class="spu-desc-header">
+              <up-tabs
+                :list="tabList"
+                v-model:current="currentTab"
+                lineColor="#ba2636"
+                :activeStyle="{
+                  color: '#ba2636',
+                  fontWeight: 'bold',
+                  transform: 'scale(1.05)',
+                }"
+              />
             </div>
-            <div class="spu-desc-header-item" @click="currentTab = 1" :class="{ active: currentTab === 1 }">
-              <span>服务说明</span>
-              <div class="red" v-show="currentTab === 1"></div>
-            </div>
-          </div>
+          </up-sticky>
           <div class="spu-desc-content" v-if="currentTab === 0">
             <image v-for="(url, index) in descriptionUrls" :key="index" :src="url" mode="widthFix" class="desc-image w-100vw" />
           </div>
@@ -61,7 +60,7 @@
       </div>
     </div>
     <div class="spu-footer">
-      <div class="spu-footer-item">
+      <div class="spu-footer-item" @click="handleQuestion">
         <image :src="netConfig.picURL + '/static/home/chat.svg'" class="consult" />
         <span>详细问问</span>
       </div>
@@ -74,304 +73,333 @@
 </template>
 
 <script setup lang="ts">
-import { netConfig } from '@/config/net.config';
-import { getSpuDetail, getProductSpuPage, getDetail } from '@/api/home';
-import { useUserStore } from '@/pinia/user';
-import { getUserOrder } from '@/api/order';
-
-const current = ref(0)
-const currentTab = ref(0)
-const spuDetail = ref<any>({})
-const descriptionUrls = ref([])
-const serviceUrls = ref([])
-const loading = ref(true)
-
-const card = computed(() => [
-  { title: `${spuDetail.value.shootingTime}小时拍摄`, url: 'time.svg' },
-  { title: `${spuDetail.value.retouchedImageCount}张精修`, url: 'refine.svg' },
-  { title: `${spuDetail.value.rawCount}+底图`, url: 'photo.svg' },
-  { title: `${spuDetail.value.deliveryTime}天内交付`, url: 'deliver.svg' }
-])
-
-onLoad(async (options: any) => {
-  if (options.id) {
-    try {
-      loading.value = true
-      const res = await getSpuDetail(Number(options.id))
-      spuDetail.value = res.data
-
-      // 存储categoryId到localStorage
-      uni.setStorageSync('selectedCategoryId', res.data.categoryId)
-      // 解析description和service字段中的图片URL
-      descriptionUrls.value = JSON.parse(res.data.description || '[]')
-      serviceUrls.value = JSON.parse(res.data.service || '[]')
-      loading.value = false
-
-      // 检查是否有待支付订单
-      const orderRes = await getUserOrder({
-        pageNo: 1,
-        pageSize: 10,
-        status: [0]
-      })
-      if (orderRes.data.list && orderRes.data.list.length > 0) {
-        uni.showModal({
-          title: '提示',
-          content: '您有待支付的订单，请先完成处理再继续浏览',
-          // showCancel: false,
-          showCancel: true,
-          success: () => {
-            uni.switchTab({ url: '/pages/order/index' })
-          }
-        })
-        return
-      }
-    } catch (error) {
-      console.error('获取商品详情失败:', error)
-      loading.value = false
-    }
+  import { netConfig } from '@/config/net.config';
+  import { getSpuDetail, getProductSpuPage, getDetail } from '@/api/home';
+  import { useUserStore } from '@/pinia/user';
+  import { getUserOrder } from '@/api/order';
+  interface TabItem {
+    name: string;
   }
-})
+  const current = ref(0);
+  const currentTab = ref(0);
+  const spuDetail = ref<any>({});
+  const descriptionUrls = ref([]);
+  const serviceUrls = ref([]);
+  const loading = ref(true);
+  const tabList: TabItem[] = [{ name: '产品详情' }, { name: '服务说明' }];
+  const card = computed(() => [
+    { title: `${spuDetail.value.shootingTime}小时拍摄`, url: 'time.svg' },
+    { title: `${spuDetail.value.retouchedImageCount}张精修`, url: 'refine.svg' },
+    { title: `${spuDetail.value.rawCount}+底图`, url: 'photo.svg' },
+    { title: `${spuDetail.value.deliveryTime}天内交付`, url: 'deliver.svg' },
+  ]);
 
-const userStore = useUserStore();
-const handleAppointment = () => {
-  if (!userStore.isLoggedIn) {
-    uni.showModal({
-      title: '提示',
-      content: '请先登录',
-      success: (res) => {
-        if (res.confirm) {
-          uni.navigateTo({ url: '/pages/auth/index' });
+  onLoad(async (options: any) => {
+    if (options.id) {
+      try {
+        loading.value = true;
+        const res = await getSpuDetail(Number(options.id));
+        spuDetail.value = res.data;
+
+        // 存储categoryId到localStorage
+        uni.setStorageSync('selectedCategoryId', res.data.categoryId);
+        // 解析description和service字段中的图片URL
+        descriptionUrls.value = JSON.parse(res.data.description || '[]');
+        serviceUrls.value = JSON.parse(res.data.service || '[]');
+        loading.value = false;
+
+        // 检查是否有待支付订单
+        const orderRes = await getUserOrder({
+          pageNo: 1,
+          pageSize: 10,
+          status: [0],
+        });
+        if (orderRes.data.list && orderRes.data.list.length > 0) {
+          uni.showModal({
+            title: '提示',
+            content: '您有待支付的订单，请先完成处理再继续浏览',
+            // showCancel: false,
+            showCancel: true,
+            success: () => {
+              uni.switchTab({ url: '/pages/order/index' });
+            },
+          });
+          return;
         }
+      } catch (error) {
+        console.error('获取商品详情失败:', error);
+        loading.value = false;
       }
-    });
-    return;
-  }
-  // 存储选中的商品信息
-  uni.setStorageSync('selectedSpu', spuDetail.value);
-  uni.navigateTo({ url: '/packageHome/appointment/index' });
-};
+    }
+  });
+
+  const userStore = useUserStore();
+
+  const handleBack = () => {
+    uni.navigateBack();
+  };
+
+  const handleQuestion = () => {
+    uni.navigateTo({ url: '/pages/contact/index' });
+  };
+
+  const handleAppointment = () => {
+    if (!userStore.isLoggedIn) {
+      uni.showModal({
+        title: '提示',
+        content: '请先登录',
+        success: res => {
+          if (res.confirm) {
+            uni.navigateTo({ url: '/pages/auth/index' });
+          }
+        },
+      });
+      return;
+    }
+    // 存储选中的商品信息
+    uni.setStorageSync('selectedSpu', spuDetail.value);
+    uni.navigateTo({ url: '/packageHome/appointment/index' });
+  };
 </script>
 
 <style lang="scss" scoped>
-.spu {
-  min-height: 100vh;
-  background-color: #f6f6f6;
-  &-flex {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-  &-swiper {
-    z-index: 2;
-  }
-  .indicator {
-    @include flex(row);
-    justify-content: center;
-    margin-bottom: 80rpx;
-    &__dot {
-          height: 6px;
-          width: 6px;
-          border-radius: 100px;
-          background-color: rgba(255, 255, 255, 0.35);
-          margin: 0 5px;
-          transition: background-color 0.3s;
-
-        &--active {
-              background-color: #ffffff;
-          }
-    }
-  }
-
-  .spu-layout {
+  .spu {
     position: relative;
-    .spu-main {
+    min-height: 100vh;
+    background-color: #f6f6f6;
+    &-back {
+      position: absolute;
+      top: 100rpx;
+      left: 30rpx;
+      z-index: 1000;
+      width: 50rpx;
+      height: 50rpx;
+    }
+    &-flex {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      position: absolute;
-      top: -70rpx;
-      width: 100vw;
-      .card {
+    }
+    &-swiper {
+      z-index: 2;
+    }
+    .indicator {
+      @include flex(row);
+      justify-content: center;
+      margin-bottom: 80rpx;
+      &__dot {
+        height: 6px;
+        width: 6px;
+        border-radius: 100px;
+        background-color: rgba(255, 255, 255, 0.35);
+        margin: 0 5px;
+        transition: background-color 0.3s;
+
+        &--active {
+          background-color: #ffffff;
+        }
+      }
+    }
+
+    .spu-layout {
+      position: relative;
+      .spu-main {
         display: flex;
         flex-direction: column;
-        width: 95%;
-        background-color: #fff;
-        border-radius: 16rpx;
-        position: relative;
-        box-sizing: border-box;
-        overflow: hidden;
-        margin-bottom: 32rpx;
-
-        .red-ball {
-          position: absolute;
-          width: 270rpx;
-          height: 270rpx;
-          border-radius: 50%;
-          background-color: #f8d3d3;
-          right:180rpx;
-          top: -200rpx;
-          filter: drop-shadow(0px 8px 22px rgba(248, 211, 211, 0.40))
-        }
-        .yellow-ball {
-          position: absolute;
-          width: 270rpx;
-          height: 270rpx;
-          border-radius: 50%;
-          background-color: #FDF1D4;
-          filter: drop-shadow(0px 8px 22px rgba(244, 232, 201, 0.60));
-          right:10rpx;
-          top: -180rpx;
-        }
-
-        &-top {
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: -70rpx;
+        width: 100vw;
+        .card {
           display: flex;
           flex-direction: column;
-          width: 100%;
-          padding: 32rpx;
+          width: 95%;
+          background-color: #fff;
+          border-radius: 16rpx;
+          position: relative;
           box-sizing: border-box;
-          background: linear-gradient(180deg, rgba(248, 211, 211, 0.40) 0.26%, rgba(248, 211, 211, 0.00) 30.47%), #FFF;
-          .tag {
-            padding: 12rpx 16rpx;
-            align-items: center;
-            width: 120rpx;
-            background-color: rgba(249, 233, 132, 0.90);
-            border-radius: 8rpx;
-            font-size: 28rpx;
-            margin-bottom: 16rpx;
+          overflow: hidden;
+          margin-bottom: 32rpx;
+
+          .red-ball {
+            position: absolute;
+            width: 270rpx;
+            height: 270rpx;
+            border-radius: 50%;
+            background-color: #f8d3d3;
+            right: 180rpx;
+            top: -200rpx;
+            filter: drop-shadow(0px 8px 22px rgba(248, 211, 211, 0.4));
           }
-          .desc {
-            display: flex;
-            justify-content: space-between;
-
-            .title {
-              max-width: 400rpx;
-              font-size: 36rpx;
-            }
-            .price {
-              color: #ba2636;
-              font-weight: 400;
-              margin-right: 12rpx;
-              &-num {
-              font-weight: 700;
-                font-size: 68rpx;
-              }
-            }
+          .yellow-ball {
+            position: absolute;
+            width: 270rpx;
+            height: 270rpx;
+            border-radius: 50%;
+            background-color: #fdf1d4;
+            filter: drop-shadow(0px 8px 22px rgba(244, 232, 201, 0.6));
+            right: 10rpx;
+            top: -180rpx;
           }
-        }
 
-        &-divider {
-          background: rgba(0, 0, 0, 0.12);
-          width: calc(100% - 64rpx);
-          height: 2rpx;
-          margin: 0 auto;
-        }
-
-        &-bottom {
-          display: flex;
-          flex-wrap: wrap;
-          width: 100%;
-          box-sizing: border-box;
-          padding: 32rpx;
-
-          &-item {
+          &-top {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            width: 25%;
+            width: 100%;
+            padding: 32rpx;
             box-sizing: border-box;
-            padding: 32rpx 20rpx;
-            &-one {
-              display: flex;
-              justify-content: center;
+            background: linear-gradient(180deg, rgba(248, 211, 211, 0.4) 0.26%, rgba(248, 211, 211, 0) 30.47%), #fff;
+            .tag {
+              padding: 12rpx 16rpx;
               align-items: center;
-              width: 100rpx;
-              height: 100rpx;
-              border-radius: 50%;
-              background-color: rgba(0, 0, 0, 0.04);
+              width: 120rpx;
+              background-color: rgba(249, 233, 132, 0.9);
+              border-radius: 8rpx;
+              font-size: 28rpx;
+              margin-bottom: 16rpx;
+            }
+            .desc {
+              display: flex;
+              justify-content: space-between;
 
-              .icon {
-                width: 56rpx;
-                height: 56rpx;
+              .title {
+                max-width: 400rpx;
+                font-size: 36rpx;
+              }
+              .price {
+                color: #ba2636;
+                font-weight: 400;
+                margin-right: 12rpx;
+                &-num {
+                  font-weight: 700;
+                  font-size: 68rpx;
+                }
               }
             }
-            &-two {
-              color: rgba(0, 0, 0, 0.7);
-              margin-top: 10rpx;
-              font-size: 24rpx;
-            }
           }
-        }
 
-      }
-      .spu-desc {
-        width: 100vw;
-        height: 1000rpx;
-        background-color: #fff;
+          &-divider {
+            background: rgba(0, 0, 0, 0.12);
+            width: calc(100% - 64rpx);
+            height: 2rpx;
+            margin: 0 auto;
+          }
 
-        &-header {
-          display: flex;
-          justify-content: center;
-          padding: 32rpx;
-          &-item {
+          &-bottom {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0 32rpx;
-            cursor: pointer;
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 32rpx;
 
-            &.active {
-              color: #ba2636;
-            }
-            .red {
-              width: 80%;
-              background-color: #ba2636;
-              height: 4rpx;
-              margin-top: 10rpx;
+            &-item {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 25%;
+              box-sizing: border-box;
+              padding: 32rpx 20rpx;
+              &-one {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100rpx;
+                height: 100rpx;
+                border-radius: 50%;
+                background-color: rgba(0, 0, 0, 0.04);
+
+                .icon {
+                  width: 56rpx;
+                  height: 56rpx;
+                }
+              }
+              &-two {
+                color: rgba(0, 0, 0, 0.7);
+                margin-top: 10rpx;
+                font-size: 24rpx;
+              }
             }
           }
-          
+        }
+        .spu-desc {
+          width: 100vw;
+          background-color: #fff;
+
+          &-header {
+            display: flex;
+            justify-content: center;
+            padding: 32rpx;
+            padding-top: 64rpx;
+            background-color: #fff;
+            transition: all 0.3s;
+            z-index: 100;
+
+            &.fixed {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            &-item {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 0 32rpx;
+              cursor: pointer;
+
+              &.active {
+                color: #ba2636;
+              }
+              .red {
+                width: 80%;
+                background-color: #ba2636;
+                height: 4rpx;
+                margin-top: 10rpx;
+              }
+            }
+          }
         }
       }
     }
-  }
-  &-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    box-sizing: border-box;
-    background-color: #f6f6f6;
-    padding: 32rpx 32rpx;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 28rpx;
-
-    &-blank {
+    &-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      z-index: 1000;
       width: 100vw;
-      height: 170rpx;
-    }
-
-    &-item {
+      box-sizing: border-box;
+      background-color: #f6f6f6;
+      padding: 32rpx 32rpx;
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      color: rgba(0, 0, 0, 0.7);
-      font-size: 26rpx;
-      .consult {
-        width: 60rpx;
-        height: 60rpx;
+      font-size: 28rpx;
+
+      &-blank {
+        width: 100vw;
+        height: 170rpx;
       }
 
-    }
-    &-btn {
-      padding: 16rpx 24rpx;
-      background-color: #000;
-      border-radius: 16rpx;
-      color: #fff;
+      &-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: rgba(0, 0, 0, 0.7);
+        font-size: 26rpx;
+        .consult {
+          width: 60rpx;
+          height: 60rpx;
+        }
+      }
+      &-btn {
+        padding: 16rpx 24rpx;
+        background-color: #000;
+        border-radius: 16rpx;
+        color: #fff;
+      }
     }
   }
-}
 </style>

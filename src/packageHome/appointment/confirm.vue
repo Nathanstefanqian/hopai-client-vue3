@@ -48,7 +48,6 @@
           <div class="left">备注</div>
           <div class="right">{{ orderData.contactInfo.remark || '暂无' }}</div>
          </div>
-         
       </div>
     </div>
     <div class="footer">

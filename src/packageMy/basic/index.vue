@@ -23,7 +23,7 @@
           <span class="content">{{ formatDate(user.birthday, 'YYYY-MM-DD') }}</span>
         </div>
        <div class="basic-card-item" @click="openPopup('宝宝纪念日', user.babyBirthday, 'babyBirthday')">
-          <span class="basic-card-item-title">宝宝纪念日</span> 
+          <span class="basic-card-item-title">宝宝生日</span> 
           <span class="content">{{ formatDate(user.babyBirthday, 'YYYY-MM-DD') }}</span>
         </div>
         <div class="basic-card-item" @click="openPopup('结婚纪念日', user.weddingAnniversary, 'weddingAnniversary')">

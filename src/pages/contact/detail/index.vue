@@ -1,5 +1,6 @@
 <template>
   <div class="detail">
+    <div class="detail-blank"></div>
     <image :src="imageUrl" mode="widthFix" class="detail-image"  />
   </div>
 </template>
@@ -20,10 +21,14 @@ onLoad((options: any) => {
 .detail {
   display: flex;
   align-items: center;
-  justify-content: center;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   background-color: #ba2636;
+  &-blank {
+    width: 100vw;
+    height: 10vh;
+  }
 
   &-image {
     width: 100vw;

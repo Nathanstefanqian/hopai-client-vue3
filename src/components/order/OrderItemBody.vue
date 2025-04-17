@@ -5,7 +5,7 @@
       <span>￥ {{ data.orderAmt / 100 }}</span>
     </div>
     <div class="detail">
-      <span class="text-[#ba2636]">{{ data.photoNum }}</span> 组精修、
+      <span class="text-[#ba2636]">{{ data.photoNum }}</span> 张精修、
       拍摄 <span class="text-[#ba2636]">{{ Math.ceil((data.appointmentEndTime - data.appointmentStartTime) / (1000 * 60 * 60)) }}</span> 小时
     </div>
     <div class="tag">{{ data.spuDescribe }}</div>

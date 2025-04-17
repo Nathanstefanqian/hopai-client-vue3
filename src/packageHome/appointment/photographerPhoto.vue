@@ -169,12 +169,11 @@ onLoad(async (options: any) => {
 
       &-item {
         position: relative;
-        width: 210rpx;
+        width: 30%;
         height: 280rpx;
         border-radius: 12rpx;
         margin-bottom: 28rpx;
-        margin-right: 20rpx;
-
+        margin-right: 3%;
       }
       
       .photo {
