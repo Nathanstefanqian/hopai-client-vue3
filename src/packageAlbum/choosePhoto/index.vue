@@ -14,7 +14,7 @@
     <div class="footer-blank"></div>
     <div class="footer">
       <div class="footer-btn mr-30rpx" @click="cancelSelected">取消选择</div>
-      <div class="footer-btn" @click="handleSelected"> {{ isSelected ? (selectedCount === MAX_SELECTED ? '确认提交' : `已选 ${selectedCount} / ${MAX_SELECTED}`) : '批量选择' }}</div>
+      <div class="footer-btn" @click="handleSelected"> {{ isSelected ? (selectedCount === MAX_SELECTED ? '确认提交' : `已选 ${selectedCount} / ${MAX_SELECTED}`) : '选择图片' }}</div>
     </div>
   </div>
 </template>
@@ -190,6 +190,7 @@
         position: relative;
         margin-right: 20rpx;
         margin-bottom: 20rpx;
+        width: calc((100% - 58rpx) / 3);
 
         &-image {
           width: 210rpx;

@@ -1,6 +1,6 @@
 <template>
   <div class="spu w-100vw" v-if="!loading">
-    <!-- <image class="spu-back" :src="netConfig.picURL + '/static/my/back.svg'" @click="handleBack()" /> -->
+    <image class="spu-back" :src="netConfig.picURL + '/static/my/back.svg'" @click="handleBack()" />
     <up-swiper v-if="spuDetail.sliderPicUrls?.length" class="spu-swiper" :list="spuDetail.sliderPicUrls" indicator circular height="900rpx" @change="(e: any)=> current = e.current">
       <template #indicator>
         <div class="indicator">
@@ -144,13 +144,19 @@
   };
 
   const handleAppointment = () => {
+    const userStore = useUserStore();
     if (!userStore.isLoggedIn) {
       uni.showModal({
-        title: '提示',
-        content: '请先登录',
-        success: res => {
+        title: '温馨提示',
+        content: '登录后可以享受更多功能，是否前往登录？',
+        confirmText: '去登录',
+        cancelText: '继续浏览',
+        success: async res => {
           if (res.confirm) {
-            uni.navigateTo({ url: '/pages/auth/index' });
+            uni.navigateTo({
+              url: '/pages/auth/index',
+            });
+            return;
           }
         },
       });

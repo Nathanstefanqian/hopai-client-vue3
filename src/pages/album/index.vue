@@ -2,10 +2,6 @@
   <div class="album w-100vw h-100vh flex">
     <scroll-view class="album-tab-scrollview" scroll-x="true">
       <div class="album-tab">
-        <!-- <div class="tab" v-for="item,index in tabList" :key="index" @click="handleClick(index)">
-          <span class="mb-[10rpx]" :style="active === index ? { color: '#ba2636' } : {}">{{ item.name }}</span>
-          <div class="svg-icon" v-if="active === index"></div>
-        </div> -->
         <up-tabs
           :list="tabList"
           v-model:current="active"
@@ -19,7 +15,7 @@
         />
       </div>
     </scroll-view>
-    <scroll-view class="album-main-scrollview" scroll-y="true" @scrolltolower="handleLoadMore">
+    <scroll-view class="album-main-scrollview" scroll-y="true">
       <div class="album-main">
         <!-- 这里必须叠一层 -->
         <div class="album-main-layout">
@@ -37,9 +33,6 @@
             </div>
           </up-skeleton>
         </div>
-        <!-- <div class="load-more" v-if="hasMore || loading">
-            {{ loading ? '加载中...' : hasMore ? '上拉加载更多' : '没有更多了' }}
-          </div> -->
       </div>
     </scroll-view>
   </div>
@@ -48,31 +41,28 @@
 <script setup lang="ts">
   import { netConfig } from '@/config/net.config';
   import { getAlbumPage } from '@/api/album/index';
+  import { getCategoryTree } from '@/api/home';
   import EmptyState from '@/components/common/EmptyState.vue';
   const loading = ref(false);
   const album = ref<any>([]);
   const pageNo = ref(1);
-  const hasMore = ref(true);
-  const tabList = ref([
-    { name: '全部', path: '/', categoryId: null },
-    { name: '幸福拍', path: '/discover', categoryId: 12 },
-    { name: '家庭拍', path: '/my', categoryId: 13 },
-    { name: '海外拍', path: '/my', categoryId: 50 },
-    { name: '随心拍', path: '/my', categoryId: 1 },
-  ]);
+  const tabList = ref([{ name: '全部', path: '/', categoryId: null }]);
   const active = ref(0);
-  const handleClick = () => {
-    // active.value = index;
-    pageNo.value = 1;
-    album.value = [];
-    hasMore.value = true;
-    getData();
-  };
 
   const getData = async () => {
-    if (loading.value || !hasMore.value) return;
+    if (loading.value) return;
     loading.value = true;
     try {
+      const resTree = await getCategoryTree();
+      // 更新tabList，保留第一个"全部"选项
+      if (resTree.data?.length) {
+        const categoryTabs = resTree.data.map((item: any) => ({
+          name: item.name,
+          path: '/my',
+          categoryId: item.id,
+        }));
+        tabList.value = [tabList.value[0], ...categoryTabs];
+      }
       const params = {
         pageNo: pageNo.value,
         pageSize: 100,
@@ -80,13 +70,20 @@
       };
       const res = await getAlbumPage(params);
       const list = res.data?.list || [];
-      album.value = list;
+      album.value = list.map((item: any) => {
+        if (item?.backgroundUrl && item.backgroundUrl.startsWith('https://hopai-workspace.oss-cn-shanghai.aliyuncs.com')) {
+          item.backgroundUrl = item.backgroundUrl + '/minipreview';
+        }
+        return item;
+      });
     } finally {
       loading.value = false;
     }
   };
-
-  const handleLoadMore = () => {
+  const handleClick = () => {
+    // active.value = index;
+    pageNo.value = 1;
+    album.value = [];
     getData();
   };
 
@@ -99,14 +96,12 @@
   onLoad(async () => {
     pageNo.value = 1;
     album.value = [];
-    hasMore.value = true;
     await getData();
   });
 
   onPullDownRefresh(async () => {
     pageNo.value = 1;
     album.value = [];
-    hasMore.value = true;
     await getData();
     uni.stopPullDownRefresh();
   });

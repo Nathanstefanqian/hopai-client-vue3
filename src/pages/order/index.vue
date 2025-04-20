@@ -422,7 +422,7 @@
         buttonConfig.onClick = () => handleQrCode(item);
         break;
       case 4:
-        buttonConfig.text = '去选图';
+        buttonConfig.text = '选精修图';
         buttonConfig.class = 'download';
         buttonConfig.onClick = () => handleSelectPhoto(item);
         break;
@@ -529,7 +529,7 @@
     }
   };
 
-  onMounted(() => {
+  onShow(() => {
     getOrderList({ pageNo: 1, pageSize: 10 });
   });
 </script>

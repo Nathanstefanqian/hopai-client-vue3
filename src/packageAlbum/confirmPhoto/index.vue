@@ -119,6 +119,7 @@
         position: relative;
         margin-right: 20rpx;
         margin-bottom: 20rpx;
+        width: calc((100% - 58rpx) / 3);
 
         &-image {
           width: 210rpx;

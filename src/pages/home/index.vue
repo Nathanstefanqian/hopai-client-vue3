@@ -75,24 +75,7 @@
   };
 
   onLoad(async () => {
-    const userStore = useUserStore();
     loading.value = true;
-    if (!userStore.isLoggedIn) {
-      uni.showModal({
-        title: '温馨提示',
-        content: '登录后可以享受更多功能，是否前往登录？',
-        confirmText: '去登录',
-        cancelText: '继续浏览',
-        success: async res => {
-          if (res.confirm) {
-            uni.navigateTo({
-              url: '/pages/auth/index',
-            });
-            return;
-          }
-        },
-      });
-    }
     try {
       await getBanners();
       const res = await getCategoryTree();
