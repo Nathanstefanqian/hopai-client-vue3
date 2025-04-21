@@ -7,9 +7,13 @@
     </div>
     <div class="detail-item">
       <div class="detail-item-header">拍摄地点</div>
-      <div class="detail-item-input" @click="handleChooseLocation">{{ formData.area || '点击选择位置' }}</div>
-      <input v-model="formData.address" class="detail-item-input" placeholder="详细地址" disabled />
-      <textarea v-model="formData.detailAddress" class="detail-item-input detail-item-area h-200rpx" placeholder="请输入补充地址信息（选填）"></textarea>
+      <div class="location-wrapper">
+        <div class="location-selector" @click="handleChooseLocation">
+          <span class="location-text" :class="{ 'empty-text': formData }">{{ formData.area ? formData.address + ' ' + formData.area : '点击选择位置' }}</span>
+          <image class="location-icon" :src="netConfig.picURL + '/static/my/place.svg'" />
+        </div>
+      </div>
+      <textarea v-model="formData.detailAddress" class="detail-item-input detail-item-area h-100rpx" placeholder="请输入补充地址信息（选填）"></textarea>
     </div>
     <div class="detail-item">
       <div class="detail-item-header">备注</div>
@@ -25,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+  import { netConfig } from '@/config/net.config';
   import { getLocationInfo } from '@/utils/location';
 
   const formData = reactive({
@@ -232,5 +237,65 @@
     color: rgba(40, 40, 40, 0.5);
     text-align: right;
     margin-top: 8rpx;
+  }
+
+  .location-wrapper {
+    margin-top: 24rpx;
+    border: 2rpx solid rgba(0, 0, 0, 0.1);
+    border-radius: 12rpx;
+    background-color: #fff;
+    overflow: hidden;
+
+    .location-selector {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 26rpx;
+      background-color: #fff;
+      border: none;
+      margin-top: 0;
+    }
+
+    input {
+      padding: 26rpx;
+      font-size: 28rpx;
+      color: #282828;
+      border: none;
+      margin-top: 0;
+      background-color: #fff;
+      width: 100%;
+      box-sizing: border-box;
+
+      &::placeholder {
+        color: rgba(40, 40, 40, 0.3);
+      }
+    }
+
+    .location-divider {
+      height: 2rpx;
+      background-color: rgba(0, 0, 0, 0.1);
+      margin: 0;
+    }
+  }
+
+  .location-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 1.4;
+    font-size: 28rpx;
+    color: #282828;
+    .empty-text {
+      color: rgba(40, 40, 40, 0.3) !important;
+    }
+  }
+
+  .location-icon {
+    width: 32rpx;
+    height: 32rpx;
+    margin-left: 12rpx;
+    flex-shrink: 0;
   }
 </style>

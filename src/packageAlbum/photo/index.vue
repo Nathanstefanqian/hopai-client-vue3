@@ -13,8 +13,9 @@
     <!-- <up-loadmore :status="loadMoreStatus" /> -->
     <div class="footer-blank"></div>
     <div class="footer">
-      <div class="footer-btn mr-30rpx" @click="cancelSelected">原图下载</div>
-      <div class="footer-btn" @click="handleSelected">确认下载</div>
+      <div class="footer-btn mr-30rpx footer-btn-1" @click="seeOriginal">底图</div>
+      <div class="footer-btn mr-30rpx" @click="cancelSelected">取消选择</div>
+      <div class="footer-btn" @click="handleSelected"> {{ isSelected ? '确认下载' : '批量选择' }}</div>
     </div>
   </div>
 </template>
@@ -36,7 +37,7 @@
 
   // 定义图片列表
   const list = ref<Array<{ picUrl: string; selected: boolean; originalUrl: string }>>([]);
-  const isSelected = ref<boolean>(true);
+  const isSelected = ref<boolean>(false);
   // let getStsToken: () => Promise<void>;
   // let signatrueUrl: (url: string) => Promise<string>;
 
@@ -108,10 +109,14 @@
     });
   };
 
-  const cancelSelected = () => {
+  const seeOriginal = () => {
     uni.navigateTo({
       url: `/packageAlbum/originalPhoto/index?orderId=${orderId.value}`,
     });
+  };
+
+  const cancelSelected = () => {
+    isSelected.value = false;
   };
 
   const handleSelected = () => {
@@ -258,6 +263,11 @@
         background-color: #000;
         color: #fff;
         padding: 24rpx;
+
+        &-1 {
+          width: 100rpx;
+          background-color: #ba2636;
+        }
       }
 
       &-blank {

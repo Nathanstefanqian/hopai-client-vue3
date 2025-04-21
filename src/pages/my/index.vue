@@ -140,6 +140,25 @@
     return `<span>距离${type} <span style="color: #ba2636">${daysLeft}</span> 天</span>`;
   };
 
+  // 页面显示时检查用户信息
+  onShow(async () => {
+    if (!isLoggedIn) return;
+    await getData();
+    if (user.value && (!user.value.avatar || !user.value.nickname)) {
+      uni.showModal({
+        title: '提示',
+        content: '请完善头像与昵称的设置',
+        showCancel: false,
+        confirmText: '前往设置',
+        success: () => {
+          uni.navigateTo({
+            url: '/packageMy/basic/index',
+          });
+        },
+      });
+    }
+  });
+
   // 获取数据
   const getData = async () => {
     loading.value = true;
@@ -155,13 +174,10 @@
         data: user.value.nickname,
       });
 
-      // 防止生日为 null
-      if (user?.value?.birthday == null) user.value.birthday = dayjs().valueOf();
-
-      // 格式化宝宝生日、结婚纪念日、生日信息
-      babyBirthdayDisplay.value = formatDateDisplay(user.value?.babyBirthday ?? null, '宝宝生日');
-      weddingAnniversaryDisplay.value = formatDateDisplay(user.value?.weddingAnniversary ?? null, '结婚纪念日');
-      birthdayDisplay.value = formatDateDisplay(user.value?.birthday ?? null, '生日');
+      // 处理日期显示
+      babyBirthdayDisplay.value = user.value?.babyBirthday ? formatDateDisplay(user.value.babyBirthday, '宝宝生日') : '';
+      weddingAnniversaryDisplay.value = user.value?.weddingAnniversary ? formatDateDisplay(user.value.weddingAnniversary, '结婚纪念日') : '';
+      birthdayDisplay.value = user.value?.birthday ? formatDateDisplay(user.value.birthday, '生日') : '';
     } finally {
       loading.value = false;
     }

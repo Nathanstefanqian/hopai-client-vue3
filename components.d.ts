@@ -12,7 +12,6 @@ declare module 'vue' {
     EmptyState: typeof import('./src/components/common/EmptyState.vue')['default']
     ImgCrop: typeof import('./src/components/img-crop/img-crop.vue')['default']
     LjWaterfall: typeof import('./src/components/lj-waterfall/lj-waterfall.vue')['default']
-    OrderCard: typeof import('./src/components/order/orderCard.vue')['default']
     OrderItemBody: typeof import('./src/components/order/OrderItemBody.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
