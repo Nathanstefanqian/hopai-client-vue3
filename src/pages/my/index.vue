@@ -26,7 +26,7 @@
       <div class="my-main-menu">
         <div class="my-main-menu-tab">
           <div v-for="(item, index) in tabItems" :key="index" class="tab">
-            <button v-if="item.text === '意见反馈'" open-type="feedback" class="tab-button">
+            <button v-if="item.text === '意见反馈'" open-type="contact" class="tab-button">
               <div class="tab-icon">
                 <image :src="netConfig.picURL + item.icon" class="w-64rpx h-64rpx" />
               </div>
