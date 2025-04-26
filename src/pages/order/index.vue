@@ -55,7 +55,7 @@
                     <div class="data-item">
                       <span class="mr-20rpx">{{ item.photographerName }}</span>
                       <span class="mr-20rpx">{{ item.photographerPhone }}</span>
-                      <span class="mr-20rpx contakt" @click="handleCall(item.id)">联系摄影师</span>
+                      <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
                     </div>
                   </div>
                   <div class="order-item-desc-one-item">
@@ -166,18 +166,18 @@
     });
   };
 
-  const handleCall = async (orderId: string) => {
+  const handleCall = async (phone: string) => {
     try {
-      const response = await getTmpPhone(orderId);
-      const phone = response?.data;
+      // const response = await getTmpPhone(orderId);
+      // const phone = response?.data;
 
-      if (!phone) {
-        uni.showToast({
-          title: '获取手机号失败，请联系客服',
-          icon: 'none',
-        });
-        return;
-      }
+      // if (!phone) {
+      //   uni.showToast({
+      //     title: '获取手机号失败，请联系客服',
+      //     icon: 'none',
+      //   });
+      //   return;
+      // }
 
       uni.makePhoneCall({
         phoneNumber: phone,

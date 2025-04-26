@@ -28,3 +28,8 @@ export const updateUserInfo = async (data: any)=> {
 export const getArea = async () => {
   return await request.get('/system/area/tree')
 }
+
+// 连接池
+export const getStream = async (id: any) => {
+  return await request.get(`/member/order/streamOrderStatus?id=${id}`)
+}

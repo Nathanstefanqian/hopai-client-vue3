@@ -1,5 +1,11 @@
 {
-  "pages": [    
+  "pages": [ 
+    {
+      "path": "pages/test/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },  
     {
       "path": "pages/home/index",
       "style": {

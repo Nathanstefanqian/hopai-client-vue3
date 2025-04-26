@@ -13,6 +13,6 @@
     },
     "types": ["vite/client", "uview-plus/types"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "config/**/*", "./components.d.ts","./auto-imports.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "config/**/*", "./components.d.ts","./auto-imports.d.ts", "src/pages/test/eventsource.js"],
   "exclude": ["node_modules", "dist", "dist-beta", "dist-production"]
 }
