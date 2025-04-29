@@ -1,51 +1,72 @@
 <template>
-  <div class="test"> 123 </div>
-  <button @click="handleClick">点击</button>
+  <button @click="start" style="margin-top: 100rpx">开始</button>
+  <button @click="stop">停止</button>
+  <template v-if="loading">
+    <view>{{ openLoading ? '正在连接sse...' : '连接完成！' }}</view>
+    <view>{{ loading ? '加载中...' : '' }}</view>
+  </template>
+
+  <view>
+    {{ responseText }}
+  </view>
+
+  <gao-ChatSSEClient ref="chatSSEClientRef" @onOpen="openCore" @onError="errorCore" @onMessage="messageCore" @onFinish="finishCore" />
 </template>
 
-<script setup lang="ts">
-  import { SSEProcessor } from 'sse-kit/lib/bundle.weapp.esm';
+<script setup>
+  import { ref } from 'vue';
   import { useUserStore } from '@/pinia/user';
-
   const userStore = useUserStore();
-  const header = {
-    header: {
-      Authorization: `Bearer ${userStore.token}`,
-    },
-  };
-  const sseInstance = new SSEProcessor({
-    url: 'https://api.hopai.cn/app-api/member/order/streamOrderStatus',
-    method: 'GET',
-    reqParams: { id: '1916073532582330370' },
-    headers: { Authorization: `Bearer ${userStore.token}` },
-    enableConsole: true, // 开启调试日志
-    timeout: 100000,
-    // 生命周期回调
-    onHeadersReceived: headers => console.log('连接成功'),
-    onComplete: () => console.log('请求完成'),
-    onError: err => console.error('请求错误', err),
+  const chatSSEClientRef = ref(null);
+  const responseText = ref('');
+  const loading = ref(false);
+  const openLoading = ref(false);
 
-    // 数据预处理
-    preprocessDataCallback: data => {
-      // 处理数据
-      console.log('数据预处理', data);
-      return data;
-    },
-  });
-  const handleClick = async () => {
-    console.log('点击了按钮');
-    // 获取 SSE 请求数据；
-    for await (const chunk of sseInstance.message()) {
-      // const decoder = new TextDecoder();
-      // const text = decoder.decode(chunk);
-      console.log('获取到新的 chunk----------:');
-    }
+  const openCore = response => {
+    openLoading.value = false;
+    console.log('open sse：', response);
+  };
+  const errorCore = err => {
+    console.log('error sse：', err);
+  };
+  const messageCore = msg => {
+    console.log('message sse：', msg);
+    responseText.value += `${msg.data}
+
+  `;
+  };
+  const finishCore = () => {
+    console.log('finish sse');
+    loading.value = false;
+  };
+
+  const start = () => {
+    if (loading.value) return;
+
+    openLoading.value = true;
+    loading.value = true;
+    responseText.value = '';
+
+    chatSSEClientRef.value.startChat({
+      /**
+       * 将它换成你的地址
+       * 注意：
+       * 如果使用 sse-server.js 要在手机端使用的话，请确保你的手机和电脑处在一个局域网下并且是正常的ip地址
+       */
+      url: 'https://api.hopai.cn/app-api/member/order/streamOrderStatus',
+      // 请求头
+      headers: {
+        Authorization: 'Bearer ' + userStore.token,
+      },
+      // 默认为 post
+      method: 'get',
+      body: {
+        id: '1916154798681948162',
+      },
+    });
+  };
+  const stop = () => {
+    chatSSEClientRef.value.stopChat();
+    console.log('stop');
   };
 </script>
-
-<style scoped>
-  .test {
-    margin-top: 100rpx;
-    margin-left: 20rpx;
-  }
-</style>

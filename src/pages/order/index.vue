@@ -55,7 +55,7 @@
                     <div class="data-item">
                       <span class="mr-20rpx">{{ item.photographerName }}</span>
                       <span class="mr-20rpx">{{ item.photographerPhone }}</span>
-                      <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
+                      <span class="mr-20rpx contakt" @click="handleCall(item.id)">联系摄影师</span>
                     </div>
                   </div>
                   <div class="order-item-desc-one-item">
@@ -90,8 +90,9 @@
         <div class="qrcode-top">
           <div class="title">确认码</div>
           <div class="qrcode-wrapper">
-            <canvas id="qrcode" canvas-id="qrcode" style="width: 400rpx; height: 400rpx"></canvas>
+            <canvas id="qrcode" canvas-id="qrcode" style="width: 390rpx; height: 390rpx"></canvas>
           </div>
+          <div class="countdown"> {{ countdownTime }} 秒后自动关闭</div>
           <div class="desc">出示此券码给摄影师确认订单</div>
         </div>
         <div class="qrcode-bottom">
@@ -99,6 +100,7 @@
         </div>
       </div>
     </up-popup>
+    <gao-ChatSSEClient v-if="showQrCode" ref="chatSSEClientRef" @onError="errorCore" @onMessage="messageCore" @onFinish="finishCore" />
   </div>
 </template>
 
@@ -124,6 +126,9 @@
   const currentOrder = ref<any>(null);
   const showQrCode = ref(false);
   const qrCodeData = ref('');
+  const chatSSEClientRef = ref(null);
+  const userStore = useUserStore();
+
   const loadmoreStatus = computed(() => {
     if (isLoadingMore.value) return 'loading';
     if (noMore.value) return 'nomore';
@@ -145,6 +150,19 @@
     11: '订单超时',
   };
 
+  const handleMessage = (msg: any) => {
+    console.log('message sse：', msg);
+    if (msg.data === 'orderStatus: 3') {
+      active.value = 3; // 切换到待交付页面
+      getOrderList({ pageNo: 1, pageSize: 10, status: tabList.value[active.value].status });
+    }
+  };
+
+  const handleFinish = (msg: any) => {
+    console.log('finish sse：123', msg);
+    showQrCode.value = false;
+  };
+
   const tabList = ref([
     { name: '全部', path: '/', status: undefined },
     { name: '待支付', path: '/discover', status: [0] },
@@ -153,6 +171,7 @@
     { name: '已完成', path: '/my', status: [100] },
     { name: '退款', path: '/my', status: [20, 30] },
   ]);
+
   const handleCopy = (id: string) => {
     uni.setClipboardData({
       data: id,
@@ -166,18 +185,18 @@
     });
   };
 
-  const handleCall = async (phone: string) => {
+  const handleCall = async (orderId: string) => {
     try {
-      // const response = await getTmpPhone(orderId);
-      // const phone = response?.data;
+      const response = await getTmpPhone(orderId);
+      const phone = response?.data;
 
-      // if (!phone) {
-      //   uni.showToast({
-      //     title: '获取手机号失败，请联系客服',
-      //     icon: 'none',
-      //   });
-      //   return;
-      // }
+      if (!phone) {
+        uni.showToast({
+          title: '获取手机号失败，请联系客服',
+          icon: 'none',
+        });
+        return;
+      }
 
       uni.makePhoneCall({
         phoneNumber: phone,
@@ -444,7 +463,6 @@
     uni.showLoading({
       title: '提交中...',
     });
-    const userStore = useUserStore();
     const userInfo = userStore.userInfo;
     const payParams = {
       id: item.id,
@@ -506,6 +524,27 @@
     });
   };
 
+  const countdownTime = ref(60);
+  const countdownTimer = ref<any>(null);
+
+  watch(showQrCode, newVal => {
+    if (!newVal) {
+      clearInterval(countdownTimer.value);
+    }
+  });
+
+  const startCountdown = () => {
+    countdownTime.value = 60;
+    countdownTimer.value = setInterval(() => {
+      if (countdownTime.value > 0) {
+        countdownTime.value--;
+      } else {
+        clearInterval(countdownTimer.value);
+        showQrCode.value = false;
+      }
+    }, 1000);
+  };
+
   const handleQrCode = async (item: any) => {
     try {
       const res = await getQrCode(item.id);
@@ -519,6 +558,8 @@
       qr.drawCanvas();
       currentOrder.value = item;
       showQrCode.value = true;
+      startSSE();
+      startCountdown();
     } catch (error) {
       console.error('获取订单二维码失败:', error);
       uni.showToast({
@@ -527,6 +568,45 @@
         duration: 2000,
       });
     }
+  };
+
+  const messageCore = (msg: any) => {
+    console.log('message sse：', msg);
+    if (msg.data === 'orderStatus: 3') {
+      uni.showToast({
+        title: '摄影师已验劵',
+        icon: 'success',
+        mask: true,
+      });
+      active.value = 3; // 切换到待交付页面
+      getOrderList({ pageNo: 1, pageSize: 10, status: tabList.value[active.value].status });
+      stopSSE();
+    }
+  };
+
+  const finishCore = (msg: any) => {
+    console.log('finish sse：', msg);
+  };
+
+  const errorCore = (err: any) => {
+    console.log('finish sse：', err);
+  };
+
+  const stopSSE = () => {
+    chatSSEClientRef.value?.stopChat();
+  };
+
+  const startSSE = () => {
+    chatSSEClientRef.value?.startChat({
+      url: 'https://api.hopai.cn/app-api/member/order/streamOrderStatus',
+      headers: {
+        Authorization: 'Bearer ' + userStore.token,
+      },
+      method: 'get',
+      body: {
+        id: props.orderId,
+      },
+    });
   };
 
   onShow(() => {
@@ -801,6 +881,26 @@
         font-size: 32rpx;
         font-weight: 500;
         margin-bottom: 16rpx;
+      }
+      .desc {
+        font-size: 28rpx;
+        color: rgba(40, 40, 40, 0.7);
+        margin-bottom: 16rpx;
+      }
+      .tag {
+        display: inline-block;
+        padding: 4rpx 16rpx;
+        background: rgba(186, 38, 54, 0.1);
+        border-radius: 8rpx;
+        font-size: 24rpx;
+        color: #ba2636;
+        margin-bottom: 24rpx;
+      }
+      .countdown {
+        text-align: center;
+        color: #999;
+        font-size: 24rpx;
+        margin: 16rpx 0;
       }
       .desc {
         font-size: 28rpx;

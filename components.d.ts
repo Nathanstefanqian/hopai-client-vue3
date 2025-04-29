@@ -13,6 +13,7 @@ declare module 'vue' {
     ImgCrop: typeof import('./src/components/img-crop/img-crop.vue')['default']
     LjWaterfall: typeof import('./src/components/lj-waterfall/lj-waterfall.vue')['default']
     OrderItemBody: typeof import('./src/components/order/OrderItemBody.vue')['default']
+    OrderStatusListener: typeof import('./src/components/order/OrderStatusListener.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Tab: typeof import('./src/components/my/Tab.vue')['default']
