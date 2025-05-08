@@ -94,12 +94,34 @@
   };
 
   // 联系客服处理函数
-  const handleContact = () => {
-    // 这里可以添加联系客服的具体实现
-    uni.showToast({
-      title: '正在连接客服',
-      icon: 'none',
-    });
+  const handleContact = async (orderId: string) => {
+    try {
+      const response = await getTmpPhone(id.value);
+      const phone = response?.data;
+
+      if (!phone) {
+        uni.showToast({
+          title: '获取手机号失败，请联系客服',
+          icon: 'none',
+        });
+        return;
+      }
+
+      uni.makePhoneCall({
+        phoneNumber: phone,
+        fail: () => {
+          uni.showToast({
+            title: '拨打电话失败',
+            icon: 'none',
+          });
+        },
+      });
+    } catch (error) {
+      uni.showToast({
+        title: '获取手机号失败，请联系客服',
+        icon: 'none',
+      });
+    }
   };
 </script>
 
@@ -119,7 +141,7 @@
         position: relative;
         margin-right: 20rpx;
         margin-bottom: 20rpx;
-        width: calc((100% - 58rpx) / 3);
+        width: calc((100% - 70rpx) / 3);
 
         &-image {
           width: 210rpx;

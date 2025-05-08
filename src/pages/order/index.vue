@@ -55,7 +55,7 @@
                     <div class="data-item">
                       <span class="mr-20rpx">{{ item.photographerName }}</span>
                       <span class="mr-20rpx">{{ item.photographerPhone }}</span>
-                      <span class="mr-20rpx contakt" @click="handleCall(item.photographerPhone)">联系摄影师</span>
+                      <span class="mr-20rpx contakt" @click="handleCall(item.id)">联系摄影师</span>
                     </div>
                   </div>
                   <div class="order-item-desc-one-item">
@@ -90,8 +90,9 @@
         <div class="qrcode-top">
           <div class="title">确认码</div>
           <div class="qrcode-wrapper">
-            <canvas id="qrcode" canvas-id="qrcode" style="width: 400rpx; height: 400rpx"></canvas>
+            <canvas id="qrcode" canvas-id="qrcode"></canvas>
           </div>
+          <div class="countdown"> {{ countdownTime }} 秒后自动关闭</div>
           <div class="desc">出示此券码给摄影师确认订单</div>
         </div>
         <div class="qrcode-bottom">
@@ -99,6 +100,7 @@
         </div>
       </div>
     </up-popup>
+    <OrderStatusListener ref="orderRef" v-if="showQrCode" :orderId="currentOrder.id" @onMessage="handleMessage" @onFinish="handleFinish" :showQrCode="showQrCode" />
   </div>
 </template>
 
@@ -112,6 +114,7 @@
   import pingpp from 'pingpp-js';
   // @ts-ignore 引入二维码生成库
   import UQRCode from 'uqrcodejs';
+  import { OrderStatusListener } from '@/components/order/OrderStatusListener.vue';
 
   const active = ref(0);
   const orderList: any = ref([]);
@@ -124,6 +127,7 @@
   const currentOrder = ref<any>(null);
   const showQrCode = ref(false);
   const qrCodeData = ref('');
+  const orderRef = ref(null);
   const loadmoreStatus = computed(() => {
     if (isLoadingMore.value) return 'loading';
     if (noMore.value) return 'nomore';
@@ -145,6 +149,19 @@
     11: '订单超时',
   };
 
+  const handleMessage = (msg: any) => {
+    console.log('message sse：', msg);
+    if (msg.data === 'orderStatus: 3') {
+      active.value = 3; // 切换到待交付页面
+      getOrderList({ pageNo: 1, pageSize: 10, status: tabList.value[active.value].status });
+    }
+  };
+
+  const handleFinish = (msg: any) => {
+    console.log('finish sse：123', msg);
+    showQrCode.value = false;
+  };
+
   const tabList = ref([
     { name: '全部', path: '/', status: undefined },
     { name: '待支付', path: '/discover', status: [0] },
@@ -153,6 +170,7 @@
     { name: '已完成', path: '/my', status: [100] },
     { name: '退款', path: '/my', status: [20, 30] },
   ]);
+
   const handleCopy = (id: string) => {
     uni.setClipboardData({
       data: id,
@@ -166,27 +184,22 @@
     });
   };
 
-  const handleCall = async (phone: string) => {
+  const handleCall = async (orderId: string) => {
     try {
-      // const response = await getTmpPhone(orderId);
-      // const phone = response?.data;
+      const response = await getTmpPhone(orderId);
+      const phone = response?.data;
 
-      // if (!phone) {
-      //   uni.showToast({
-      //     title: '获取手机号失败，请联系客服',
-      //     icon: 'none',
-      //   });
-      //   return;
-      // }
+      if (!phone) {
+        uni.showToast({
+          title: '获取手机号失败，请联系客服',
+          icon: 'none',
+        });
+        return;
+      }
 
       uni.makePhoneCall({
         phoneNumber: phone,
-        fail: () => {
-          uni.showToast({
-            title: '拨打电话失败',
-            icon: 'none',
-          });
-        },
+        fail: () => {},
       });
     } catch (error) {
       uni.showToast({
@@ -263,11 +276,6 @@
       loading.value = true;
       const res = await getUserOrder(params);
       if (!res || !res.data) {
-        uni.showToast({
-          title: '请先登录',
-          icon: 'none',
-          duration: 2000,
-        });
         return;
       }
       const list = res.data.list || [];
@@ -466,7 +474,7 @@
       uni.hideLoading();
       if (result == 'success') {
         uni.requestSubscribeMessage({
-          tmplIds: ['evy0s2lxmliGPJj0bmlk2E9AGKD96HD0kNpKfGA4bp8'],
+          tmplIds: ['evy0s2lxmliGPJj0bmlk2E9AGKD96HD0kNpKfGA4bp8', 'OZTD3YCDPvGdqY3IzfuxkH1J3OKeQy-Das_wv2dHyS8', 'wG7WplIgaf9H_bV0EVVpBJiI7MN1aEhSBiiWRJS0IH8'],
           success: res => {
             uni.showToast({
               title: '支付成功',
@@ -506,19 +514,42 @@
     });
   };
 
+  const countdownTime = ref(60);
+  const countdownTimer = ref<any>(null);
+
+  watch(showQrCode, newVal => {
+    if (!newVal) {
+      clearInterval(countdownTimer.value);
+      orderRef.value.stopSSE();
+    }
+  });
+
+  const startCountdown = () => {
+    countdownTime.value = 60;
+    countdownTimer.value = setInterval(() => {
+      if (countdownTime.value > 0) {
+        countdownTime.value--;
+      } else {
+        clearInterval(countdownTimer.value);
+        showQrCode.value = false;
+      }
+    }, 1000);
+  };
+
   const handleQrCode = async (item: any) => {
     try {
       const res = await getQrCode(item.id);
       // 使用uQRCode生成二维码
       const qr = new UQRCode();
       qr.data = res.data;
-      qr.size = 200;
+      qr.size = 150;
       qr.make();
       const canvasContext = uni.createCanvasContext('qrcode');
       qr.canvasContext = canvasContext;
       qr.drawCanvas();
       currentOrder.value = item;
       showQrCode.value = true;
+      startCountdown();
     } catch (error) {
       console.error('获取订单二维码失败:', error);
       uni.showToast({
@@ -774,8 +805,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 400rpx;
-        height: 400rpx;
+        width: 320rpx;
         margin: 0 auto;
         margin-bottom: 24rpx;
       }
@@ -801,6 +831,26 @@
         font-size: 32rpx;
         font-weight: 500;
         margin-bottom: 16rpx;
+      }
+      .desc {
+        font-size: 28rpx;
+        color: rgba(40, 40, 40, 0.7);
+        margin-bottom: 16rpx;
+      }
+      .tag {
+        display: inline-block;
+        padding: 4rpx 16rpx;
+        background: rgba(186, 38, 54, 0.1);
+        border-radius: 8rpx;
+        font-size: 24rpx;
+        color: #ba2636;
+        margin-bottom: 24rpx;
+      }
+      .countdown {
+        text-align: center;
+        color: #999;
+        font-size: 24rpx;
+        margin: 16rpx 0;
       }
       .desc {
         font-size: 28rpx;

@@ -1,18 +1,25 @@
 {
   "pages": [ 
     {
-      "path": "pages/test/index",
-      "style": {
-        "navigationStyle": "custom"
-      }
-    },  
-    {
       "path": "pages/home/index",
       "style": {
         "navigationBarTitleText": "首页",
         "navigationStyle": "custom"
       }
     },
+    {
+      "path": "pages/order/index",
+      "style": {
+        "navigationBarTitleText": "订单",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/test/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },  
     {
       "path": "components/webview/index",
       "style": {
@@ -46,13 +53,7 @@
         "navigationStyle": "custom"
       }
     },
-    {
-      "path": "pages/order/index",
-      "style": {
-        "navigationBarTitleText": "订单",
-        "enablePullDownRefresh": true
-      }
-    },
+
     {
       "path": "pages/my/index",
       "style": {

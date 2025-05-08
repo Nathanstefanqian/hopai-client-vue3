@@ -141,7 +141,9 @@
         memberPhone: orderData.value.contactInfo.phone,
         location: orderData.value.contactInfo.address + ' ' + orderData.value.contactInfo.area + ' ' + orderData.value.contactInfo.detailAddress,
         orderAmt: orderData.value.totalAmount / 100,
-        remark: orderData.value.contactInfo.remark,
+        remark: `${orderData.value.spuInfo?.rawCount || 0}张底片/${orderData.value.spuInfo?.retouchedImageCount || 0}张精修 拍摄${orderData.value.spuInfo?.shootingTime || 0}小时/${
+          orderData.value.spuInfo?.deliveryTime || 0
+        }天交付 ${orderData.value.contactInfo.remark || ''}`,
       };
       const data: any = await createUserOrders(orderParams);
       if (!data.data) {

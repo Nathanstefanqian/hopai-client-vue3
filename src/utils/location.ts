@@ -7,7 +7,7 @@ interface LocationInfo {
 }
 
 const QQ_MAP_KEY = 'OZZBZ-FQLLN-4T4FI-SVGEM-UPV7F-O3BFA';
-
+``
 export async function getLocationInfo(latitude: number, longitude: number): Promise<LocationInfo> {
   try {
     const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${QQ_MAP_KEY}`;

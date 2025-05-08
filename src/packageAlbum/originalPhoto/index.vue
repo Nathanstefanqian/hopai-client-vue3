@@ -5,7 +5,7 @@
         <div class="photo-item" v-for="(item, index) in list" :key="index" @click="previewPicture(item.originalUrl)">
           <image :src="item.picUrl" class="photo-item-image" mode="aspectFill" lazy-load="true" />
           <div class="checkbox">
-            <up-checkbox usedAlone v-model:checked="item.selected" v-if="isSelected" shape="circle" activeColor="#ba2636" />
+            <up-checkbox usedAlone size="24" v-model:checked="item.selected" v-if="isSelected" shape="circle" activeColor="#ba2636" />
           </div>
         </div>
       </div>
@@ -244,7 +244,7 @@
         position: relative;
         margin-right: 20rpx;
         margin-bottom: 20rpx;
-        width: calc((100% - 58rpx) / 3);
+        width: calc((100% - 70rpx) / 3);
 
         &-image {
           width: 210rpx;
