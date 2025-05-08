@@ -19,7 +19,7 @@
     reqParams: { id: '1916073532582330370' },
     headers: { Authorization: `Bearer ${userStore.token}` },
     enableConsole: true, // 开启调试日志
-    timeout: 100000,
+    timeout: 600000,
     // 生命周期回调
     onHeadersReceived: headers => console.log('连接成功'),
     onComplete: () => console.log('请求完成'),
