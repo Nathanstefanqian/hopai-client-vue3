@@ -144,19 +144,19 @@
   onShow(async () => {
     if (!isLoggedIn) return;
     await getData();
-    if (user.value && (!user.value.avatar || !user.value.nickname)) {
-      uni.showModal({
-        title: '提示',
-        content: '请完善头像与昵称的设置',
-        showCancel: false,
-        confirmText: '前往设置',
-        success: () => {
-          uni.navigateTo({
-            url: '/packageMy/basic/index',
-          });
-        },
-      });
-    }
+    // if (user.value && (!user.value.avatar || !user.value.nickname)) {
+    //   uni.showModal({
+    //     title: '提示',
+    //     content: '请完善头像与昵称的设置',
+    //     showCancel: false,
+    //     confirmText: '前往设置',
+    //     success: () => {
+    //       uni.navigateTo({
+    //         url: '/packageMy/basic/index',
+    //       });
+    //     },
+    //   });
+    // }
   });
 
   // 获取数据

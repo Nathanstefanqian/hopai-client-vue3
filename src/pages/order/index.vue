@@ -100,7 +100,7 @@
         </div>
       </div>
     </up-popup>
-    <gao-ChatSSEClient v-if="showQrCode" ref="chatSSEClientRef" @onError="errorCore" @onMessage="messageCore" @onFinish="finishCore" />
+    <OrderStatusListener ref="orderRef" v-if="showQrCode" :orderId="currentOrder.id" @onMessage="handleMessage" @onFinish="handleFinish" :showQrCode="showQrCode" />
   </div>
 </template>
 
@@ -114,6 +114,7 @@
   import pingpp from 'pingpp-js';
   // @ts-ignore 引入二维码生成库
   import UQRCode from 'uqrcodejs';
+  import { OrderStatusListener } from '@/components/order/OrderStatusListener.vue';
 
   const active = ref(0);
   const orderList: any = ref([]);
@@ -126,9 +127,7 @@
   const currentOrder = ref<any>(null);
   const showQrCode = ref(false);
   const qrCodeData = ref('');
-  const chatSSEClientRef = ref(null);
-  const userStore = useUserStore();
-
+  const orderRef = ref(null);
   const loadmoreStatus = computed(() => {
     if (isLoadingMore.value) return 'loading';
     if (noMore.value) return 'nomore';
@@ -200,12 +199,7 @@
 
       uni.makePhoneCall({
         phoneNumber: phone,
-        fail: () => {
-          uni.showToast({
-            title: '拨打电话失败',
-            icon: 'none',
-          });
-        },
+        fail: () => {},
       });
     } catch (error) {
       uni.showToast({
@@ -282,11 +276,6 @@
       loading.value = true;
       const res = await getUserOrder(params);
       if (!res || !res.data) {
-        uni.showToast({
-          title: '请先登录',
-          icon: 'none',
-          duration: 2000,
-        });
         return;
       }
       const list = res.data.list || [];
@@ -463,6 +452,7 @@
     uni.showLoading({
       title: '提交中...',
     });
+    const userStore = useUserStore();
     const userInfo = userStore.userInfo;
     const payParams = {
       id: item.id,
@@ -484,7 +474,7 @@
       uni.hideLoading();
       if (result == 'success') {
         uni.requestSubscribeMessage({
-          tmplIds: ['evy0s2lxmliGPJj0bmlk2E9AGKD96HD0kNpKfGA4bp8'],
+          tmplIds: ['evy0s2lxmliGPJj0bmlk2E9AGKD96HD0kNpKfGA4bp8', 'OZTD3YCDPvGdqY3IzfuxkH1J3OKeQy-Das_wv2dHyS8', 'wG7WplIgaf9H_bV0EVVpBJiI7MN1aEhSBiiWRJS0IH8'],
           success: res => {
             uni.showToast({
               title: '支付成功',
@@ -530,6 +520,7 @@
   watch(showQrCode, newVal => {
     if (!newVal) {
       clearInterval(countdownTimer.value);
+      orderRef.value.stopSSE();
     }
   });
 
@@ -558,7 +549,6 @@
       qr.drawCanvas();
       currentOrder.value = item;
       showQrCode.value = true;
-      startSSE();
       startCountdown();
     } catch (error) {
       console.error('获取订单二维码失败:', error);
@@ -568,45 +558,6 @@
         duration: 2000,
       });
     }
-  };
-
-  const messageCore = (msg: any) => {
-    console.log('message sse：', msg);
-    if (msg.data === 'orderStatus: 3') {
-      uni.showToast({
-        title: '摄影师已验劵',
-        icon: 'success',
-        mask: true,
-      });
-      active.value = 3; // 切换到待交付页面
-      getOrderList({ pageNo: 1, pageSize: 10, status: tabList.value[active.value].status });
-      stopSSE();
-    }
-  };
-
-  const finishCore = (msg: any) => {
-    console.log('finish sse：', msg);
-  };
-
-  const errorCore = (err: any) => {
-    console.log('finish sse：', err);
-  };
-
-  const stopSSE = () => {
-    chatSSEClientRef.value?.stopChat();
-  };
-
-  const startSSE = () => {
-    chatSSEClientRef.value?.startChat({
-      url: 'https://api.hopai.cn/app-api/member/order/streamOrderStatus',
-      headers: {
-        Authorization: 'Bearer ' + userStore.token,
-      },
-      method: 'get',
-      body: {
-        id: props.orderId,
-      },
-    });
   };
 
   onShow(() => {

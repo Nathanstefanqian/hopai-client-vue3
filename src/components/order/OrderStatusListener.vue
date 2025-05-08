@@ -8,7 +8,7 @@
 
   const props = defineProps<{
     orderId: string;
-    showQrCo: boolean;
+    showQrCode: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -30,15 +30,16 @@
   };
 
   const messageCore = (msg: any) => {
-    console.log('message sse：', msg);
     if (msg.data === 'orderStatus: 3') {
       uni.showToast({
         title: '摄影师已验劵',
         icon: 'success',
         mask: true,
       });
+      emit('onMessage', msg);
       stopSSE();
     }
+    emit('onMessage', msg);
   };
 
   const finishCore = (msg: any) => {
@@ -54,7 +55,7 @@
       },
       method: 'get',
       body: {
-        id: currentOrder.id,
+        id: props.orderId,
       },
     });
   };
@@ -71,16 +72,6 @@
   onUnmounted(() => {
     stopSSE();
   });
-
-  watch(
-    () => props.showQrCo,
-    (newVal, oldVal) => {
-      console.log('showQrCode changed:', { newVal, oldVal });
-      if (!newVal) {
-        stopSSE();
-      }
-    }
-  );
 
   // 暴露方法给父组件
   defineExpose({
